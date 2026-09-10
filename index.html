@@ -1198,6 +1198,12 @@ S.escape=function(){
   var guards=[{x:300,a:250,b:560,dir:1,st:'patrol',tm:0,next:2.6,tx:0},
               {x:1020,a:940,b:1250,dir:-1,st:'patrol',tm:0,next:3.4,tx:0}];
   var GORX=880, J={y:0,vy:0,roll:0};
+  var CP=[60,620,880,1380], seen=0;          // места, откуда начинаешь заново
+  function respawn(){
+    var i,best;
+    if(goal==='exit'){ best=CP[0]; for(i=0;i<CP.length;i++) if(CP[i]<x-60) best=CP[i]; return best; }
+    best=CP[CP.length-1]; for(i=CP.length-1;i>=0;i--) if(CP[i]>x+60) best=CP[i]; return best;
+  }
   function say(lines,after){ d=Dialog(lines,after); mode='talk'; }
   say([['narr','Коридор. Где-то наверху всё ещё хлопают.'],
        ['roma','Эти в чёрном ходят туда-сюда и резко оборачиваются. Пока не смотрят — беги, а за ящиком приседай (↓).'],
@@ -1276,12 +1282,18 @@ S.escape=function(){
       else if(mv){ face=mv; x+=mv*sp*dt; wt+=dt; }
       gravity(J,dt);
       x=Math.max(24,Math.min(WW-30,x));
+      var spotted=false;
       for(var i=0;i<guards.length;i++){
         var g=guards[i]; guardStep(g,dt);
         var dx=(x-g.x)*g.dir;
-        if(caught<=0 && dx>0 && dx<sight(g) && !hidden()){
-          caught=2.2; sfx('alarm'); x=Math.max(24,goal==='exit'?60:GORX-60); }
+        if(dx>0 && dx<sight(g) && !hidden()) spotted=true;
       }
+      if(caught<=0){
+        if(spotted){
+          seen+=dt;                                   // не мгновенно: полсекунды на то, чтобы убежать или присесть
+          if(seen>0.5){ caught=2.2; seen=0; sfx('alarm'); x=respawn(); }
+        } else seen=Math.max(0,seen-dt*1.6);
+      } else seen=0;
       if(press('A')){
         var tr2=nearTorch();
         if(tr2) dropTorch(tr2);
@@ -1374,8 +1386,16 @@ S.escape=function(){
         else if(goal==='exit'&&x>WW-90) T('[Z] посмотреть в щель',x-cam,GROUND-70+J.y,{size:9,color:'#F4A63C',align:'center'});
         else if(goal==='gorelan'&&Math.abs(x-GORX)<26) T('[Z] позвать Горелана',x-cam,GROUND-70+J.y,{size:9,color:'#F4A63C',align:'center'});
       }
+      if(seen>0&&caught<=0){                        // видно, что тебя вот-вот заметят
+        var sy=GROUND-78+J.y;
+        T('!',x-cam,sy,{size:15,font:FD,color:'#F4A63C',align:'center'});
+        R(x-cam-11,sy+3,22,3,'rgba(0,0,0,.5)');
+        R(x-cam-11,sy+3,22*Math.min(1,seen/0.5),3,'#C24A2C');
+      }
       if(caught>0){ ctx.globalAlpha=Math.min(1,caught);
-        T('ЗАМЕТИЛИ!',W/2,70,{size:20,font:FD,color:'#C24A2C',align:'center'}); ctx.globalAlpha=1; }
+        T('ЗАМЕТИЛИ!',W/2,70,{size:20,font:FD,color:'#C24A2C',align:'center'});
+        T('начинаем с ближайшего места, а не с начала',W/2,88,{size:9,color:'#CDBBA5',align:'center'});
+        ctx.globalAlpha=1; }
       if(mode==='talk') d.draw();
     }};
 };
@@ -1513,6 +1533,7 @@ S.village=function(){
       if(mode==='talk'){ d.update(dt); return; }
       if(mode==='drink'){
         drink=Math.max(0,drink-14*dt);
+        if(isDown('A')) drink+=17*dt;                 // держать тоже можно, просто медленнее
         if(press('A')){ drink+=8; sfx('drink'); }
         if(drink>=100){
           say([['roma','Вода была очень холодная и вкусная.'],
@@ -1589,7 +1610,7 @@ S.chase=function(){
       t+=dt; if(sh>0)sh=Math.max(0,sh-dt*10); if(msgT>0)msgT-=dt; if(wipe>0)wipe-=dt;
       if(mode==='talk'){ d.update(dt); return; }
       if(mode==='dead'){ if(press('A')){ dist=0.45; obs=[]; sign=null; mode='drive'; } return; }
-      if(mode==='win'){ return; }
+      if(mode==='win'){ if(d) d.update(dt); else nextChapter(); return; }   // страховка от тупика
       scroll+=210*dt;
       dist+=0.048*dt;
       // знак поворота
@@ -1599,7 +1620,7 @@ S.chase=function(){
         if(okL||okR){
           turns++; dist=Math.max(0,dist-0.32); sign=null; signT=0; wipe=0.55; sfx('win'); obs=[];
           flash('ЗАВЕРНУЛИ!');
-          if(turns>=need){ mode='win';
+          if(turns>=need){
             say([['narr','Резко завернули. Через некоторое время завернули за угол. Потом снова завернули.'],
                  ['roma','И мы были на нашей улице. Алексеевка!']],function(){ nextChapter(); }); }
         } else if(signT<=0){ sign=null; dist+=0.13; flash('НЕ УСПЕЛИ!'); sfx('hurt'); }
