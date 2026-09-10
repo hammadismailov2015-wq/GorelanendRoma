@@ -101,7 +101,7 @@ footer .hand{font-family:var(--f-hand); font-size:20px; color:var(--sand); displ
     <div class="cab-top">
       <span class="chip" id="chapter">Глава 1 · Конфета от дяди Толи</span>
       <button class="mute" id="fs" type="button" aria-pressed="false">На весь экран</button>
-      <button class="mute" id="mute" type="button" aria-pressed="false">Звук включён</button>
+      <button class="mute" id="mute" type="button" aria-pressed="false">Звук и музыка вкл</button>
     </div>
     <div class="screenwrap" id="screenwrap">
       <canvas id="screen" width="480" height="270" aria-label="Игровой экран: Горелан и Рома"></canvas>
@@ -242,13 +242,16 @@ function press(v){return !!hit[v]}
 
 /* ---------- звук ---------- */
 var AC=null, muted=false;
-function audioOn(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } 
-  if(AC&&AC.state==='suspended') AC.resume(); }
+function audioOn(){
+  if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(AC&&AC.state==='suspended') AC.resume();
+  if(AC&&MUS.song&&!MUS.timer){ MUS.next=AC.currentTime+0.06; MUS.timer=setInterval(musTick,25); }
+}
 window.addEventListener('keydown',audioOn,{once:true});
 cv.addEventListener('pointerdown',audioOn);
 var muteBtn=document.getElementById('mute');
 muteBtn.addEventListener('click',function(){
-  muted=!muted; muteBtn.textContent=muted?'Звук выключен':'Звук включён';
+  muted=!muted; muteBtn.textContent=muted?'Звук и музыка выкл':'Звук и музыка вкл';
   muteBtn.setAttribute('aria-pressed',muted?'true':'false');
 });
 function tone(freq,dur,type,vol,slide){
@@ -397,6 +400,128 @@ function gravity(o,dt){
 }
 function jumpNow(o){ o.vy=-170; sfx('jump'); }
 function rollNow(o){ o.roll=0.42; sfx('roll'); }
+
+/* ---------- музыка ---------- */
+/* маленький чиптюн-секвенсор: у каждой главы своя тема, всё считается
+   прямо в браузере, никаких файлов грузить не надо */
+var MUS={name:null,song:null,step:0,next:0,timer:null,bus:null};
+function musBus(){
+  if(!AC) return null;
+  if(!MUS.bus){ MUS.bus=AC.createGain(); MUS.bus.gain.value=0.5; MUS.bus.connect(AC.destination); }
+  return MUS.bus;
+}
+function mfreq(m){ return 440*Math.pow(2,(m-69)/12); }
+function mnote(m,t,dur,type,vol){
+  var bus=musBus(); if(!bus) return;
+  try{
+    var o=AC.createOscillator(), g=AC.createGain();
+    o.type=type; o.frequency.setValueAtTime(mfreq(m),t);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.014);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(bus); o.start(t); o.stop(t+dur+0.04);
+  }catch(e){}
+}
+function mnoise(t,dur,vol,hp){
+  var bus=musBus(); if(!bus) return;
+  try{
+    var n=Math.max(1,Math.floor(AC.sampleRate*dur)), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0);
+    for(var i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    var src=AC.createBufferSource(), g=AC.createGain(), f=AC.createBiquadFilter();
+    src.buffer=b; f.type='highpass'; f.frequency.value=hp||2600; g.gain.value=vol;
+    src.connect(f); f.connect(g); g.connect(bus); src.start(t);
+  }catch(e){}
+}
+function mkick(t){
+  var bus=musBus(); if(!bus) return;
+  try{
+    var o=AC.createOscillator(), g=AC.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(145,t); o.frequency.exponentialRampToValueAtTime(46,t+0.11);
+    g.gain.setValueAtTime(0.14,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.17);
+    o.connect(g); g.connect(bus); o.start(t); o.stop(t+0.22);
+  }catch(e){}
+}
+/* аккомпанемент строится из аккордов: [основа, 'm' или 'M'] */
+function bassOf(ch,per){
+  var out=[],i,k;
+  for(i=0;i<ch.length;i++) for(k=0;k<per;k++) out.push(k%4===0?ch[i][0]-12:0);
+  return out;
+}
+function arpOf(ch,per){
+  var out=[],i,k;
+  for(i=0;i<ch.length;i++){
+    var r=ch[i][0], n=[r,r+(ch[i][1]==='m'?3:4),r+7,r+12];
+    for(k=0;k<per;k++) out.push(k%2===0?n[(k/2)%4]:0);
+  }
+  return out;
+}
+function song(o){
+  o.bass=bassOf(o.ch,o.per); o.arp=arpOf(o.ch,o.per);
+  return o;
+}
+var SONGS={
+  /* вечер во дворе, немного не по себе */
+  title:song({bpm:78,per:8,ch:[[62,'m'],[58,'M'],[65,'M'],[57,'M']],
+    lead:[0,0,0,0,74,0,72,0, 69,0,0,0,0,0,0,0, 70,0,69,0,67,0,65,0, 64,0,0,0,0,0,0,0],
+    drum:'....h.......h...'}),
+  /* дурачество на скамейке */
+  bench:song({bpm:104,per:8,ch:[[60,'M'],[55,'M'],[57,'m'],[53,'M']],
+    lead:[72,0,74,0,76,0,0,72, 0,71,0,0,67,0,0,0, 69,0,71,0,72,0,0,69, 0,67,0,65,0,0,0,0],
+    drum:'k...h...s...h..h'}),
+  /* подвал и коридор: тихо, страшно */
+  dark:song({bpm:70,per:8,ch:[[62,'m'],[61,'M'],[62,'m'],[60,'M']],
+    lead:[0,0,0,0,0,0,0,0, 74,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 73,0,0,0,70,0,0,0],
+    drum:'................'}),
+  /* арена */
+  fight:song({bpm:142,per:8,ch:[[62,'m'],[58,'M'],[60,'M'],[62,'m']],
+    lead:[74,0,74,72,74,0,77,0, 74,0,72,0,70,0,69,0, 72,0,72,70,72,0,74,0, 69,0,70,0,69,0,67,0],
+    drum:'k.h.s.h.k.h.s.hh'}),
+  /* пустыня: жарко и пусто */
+  desert:song({bpm:62,per:16,ch:[[57,'m'],[55,'M']],
+    lead:[0,0,0,0,69,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,67,0,65,0, 64,0,0,0,0,0,0,0],
+    drum:'................'}),
+  /* деревня: тепло, вода */
+  village:song({bpm:96,per:8,ch:[[62,'m'],[67,'m'],[60,'M'],[65,'M']],
+    lead:[0,0,69,0,72,0,74,0, 72,0,0,69,0,0,0,0, 67,0,69,0,72,0,0,0, 69,0,67,0,65,0,0,0],
+    drum:'k...h...k...h...'}),
+  /* погоня */
+  chase:song({bpm:158,per:4,ch:[[62,'m'],[62,'m'],[63,'M'],[65,'M']],
+    lead:[74,74,0,74, 72,0,74,0, 75,75,0,75, 77,0,75,0],
+    drum:'k.hks.hkk.hks.hk'}),
+  /* дома */
+  ending:song({bpm:102,per:8,ch:[[65,'M'],[60,'M'],[67,'M'],[65,'M']],
+    lead:[72,0,74,0,77,0,0,76, 0,74,0,72,0,0,0,0, 74,0,76,0,79,0,0,77, 0,76,0,74,0,72,0,0],
+    drum:'k...h...s...h...'})
+};
+var SCENE_MUSIC={title:'title',select:'title',bench:'bench',cell:'dark',arena:'fight',
+  escape:'dark',desert:'desert',village:'village',chase:'chase',ending:'ending'};
+function musStep(sg,i,t){
+  var n;
+  n=sg.bass[i%sg.bass.length]; if(n) mnote(n,t,0.20,'triangle',0.11);
+  n=sg.arp[i%sg.arp.length];   if(n) mnote(n,t,0.11,'triangle',0.030);
+  n=sg.lead[i%sg.lead.length]; if(n) mnote(n,t,0.14,'square',0.040);
+  var dch=sg.drum.charAt(i%sg.drum.length);
+  if(dch==='k') mkick(t);
+  else if(dch==='h') mnoise(t,0.03,0.030,4200);
+  else if(dch==='s') mnoise(t,0.12,0.055,1700);
+}
+function musTick(){
+  if(!AC||!MUS.song) return;
+  if(MUS.next<AC.currentTime) MUS.next=AC.currentTime+0.05;
+  var stepLen=60/MUS.song.bpm/4;
+  while(MUS.next<AC.currentTime+0.25){
+    if(!muted) musStep(MUS.song,MUS.step,MUS.next);
+    MUS.step++; MUS.next+=stepLen;
+  }
+}
+function musPlay(name){
+  if(MUS.name===name) return;
+  MUS.name=name; MUS.song=SONGS[name]||null; MUS.step=0;
+  if(!MUS.song){ musStop(); return; }
+  if(AC){ MUS.next=AC.currentTime+0.06; if(!MUS.timer) MUS.timer=setInterval(musTick,25); }
+}
+function musStop(){ if(MUS.timer){ clearInterval(MUS.timer); MUS.timer=null; } }
+
 function head(x,y,pal,style,f){
   ctx.save(); ctx.translate(x,y); if(f<0)ctx.scale(-1,1);
   R(-6,-6,12,12,pal.skin); R(-6,3,12,3,pal.dark);
@@ -496,7 +621,10 @@ function Dialog(lines,onDone){
 /* ---------- сцены ---------- */
 var S={}, cur=null, curName='', now=0;
 var fade=0, fadeDir=0, fadeTo=null, fadeArg=null;
-function go(n,o){ curName=n; cur=S[n](o||{}); updateChip(); }
+function go(n,o){
+  curName=n; cur=S[n](o||{}); updateChip();
+  var m=SCENE_MUSIC[n]; if(m) musPlay(m);   // у заставки главы темы нет — играет прежняя
+}
 function goFade(n,o){ fadeDir=1; fadeTo=n; fadeArg=o||{}; }
 var CH=[
   {id:'bench',n:'Глава 1',t:'Конфета от дяди Толи'},
@@ -639,8 +767,10 @@ S.bench=function(){
   return {
     update:function(dt){
       t+=dt;
+      // дядя Толя уходит, отдав конфету — отдельным действием, а не веткой:
+      // как ветка else if она перехватывала диалог и выбор, и игра замирала
+      if(ph!=='in'&&ph!=='bang'&&d&&d.i>=7&&tx<560) tx+=64*dt;
       if(ph==='in'){ tx-=70*dt; if(tx<=300){ tx=300; ph='talk'; talk(part1,function(){ ph='choice'; }); } }
-      else if(ph!=='bang'&&d&&d.i>=7){ tx+=64*dt; }   // сказал «нате конфетку» и ушёл
       else if(ph==='talk'||ph==='talk2'){ if(d) d.update(dt); }
       else if(ph==='choice'){
         if(press('A')){ chosen=true; eaten=true; sfx('pick'); ph='talk2'; talk(part2,function(){ ph='bang'; t=0; }); }
