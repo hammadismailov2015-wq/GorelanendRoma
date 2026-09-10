@@ -1,0 +1,1403 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Игра по рассказу «Горелан и Рома»: восемь глав, арена, пустыня и погоня.">
+<style>html{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Горелан и Рома</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Rubik:wght@400;500;700&family=Caveat:wght@600&display=swap">
+<style>
+:root{
+  --ink:#120E0C; --ink2:#1B1512; --panel:#261E19; --line:#3D3028;
+  --sand:#E9C87C; --amber:#F4A63C; --rust:#C24A2C; --oasis:#43A894;
+  --paper:#F6ECD8; --dust:#A08D7B;
+  --f-display:"Russo One","Arial Black",system-ui,sans-serif;
+  --f-body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-hand:"Caveat","Segoe Script",cursive;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; color:var(--paper); font-family:var(--f-body); font-size:15px; line-height:1.55;
+  background-color:var(--ink);
+  background-image:
+    linear-gradient(rgba(233,200,124,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(233,200,124,.05) 1px,transparent 1px);
+  background-size:26px 26px,26px 26px;
+}
+.wrap{max-width:900px; margin:0 auto; padding-left:16px; padding-right:16px; padding-block:26px 44px;
+  display:flex; flex-direction:column; gap:22px}
+.eyebrow{margin:0; font-family:var(--f-hand); font-size:22px; color:var(--amber); letter-spacing:.02em}
+h1{margin:2px 0 8px; font-family:var(--f-display); font-size:clamp(34px,8vw,62px); line-height:.98;
+  letter-spacing:.01em; text-wrap:balance; color:var(--sand);
+  text-shadow:2px 3px 0 var(--rust), 5px 7px 0 rgba(0,0,0,.45)}
+.lede{margin:0; max-width:56ch; color:var(--dust)}
+.cab{background:var(--panel); border:3px solid var(--line); border-radius:8px; padding:12px;
+  box-shadow:0 20px 44px rgba(0,0,0,.55), inset 0 1px 0 rgba(233,200,124,.08)}
+.cab-top{display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:0 2px 10px}
+.chip{font-size:12px; font-weight:500; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--sand); background:rgba(233,200,124,.1); border:1px solid rgba(233,200,124,.28);
+  border-radius:999px; padding:4px 12px}
+.mute{margin-left:auto; font:inherit; font-size:12px; letter-spacing:.06em; color:var(--dust);
+  background:transparent; border:1px solid var(--line); border-radius:999px; padding:4px 12px; cursor:pointer}
+.mute:hover{color:var(--sand); border-color:rgba(233,200,124,.4)}
+.mute:focus-visible,.padbtn:focus-visible{outline:2px solid var(--amber); outline-offset:2px}
+canvas#screen{display:block; width:100%; aspect-ratio:16/9; background:#0A0706;
+  border-radius:3px; border:2px solid #0A0706; touch-action:none}
+.pad{display:none; margin-top:12px; gap:10px; align-items:center; justify-content:space-between}
+@media (pointer:coarse){.pad{display:flex}}
+.padside{display:flex; gap:10px}
+.padbtn{font-family:var(--f-display); font-size:17px; color:var(--paper); background:var(--ink2);
+  border:2px solid var(--line); border-radius:12px; width:62px; height:52px; cursor:pointer;
+  touch-action:none; user-select:none; -webkit-user-select:none}
+.padbtn:active{background:var(--rust); border-color:var(--amber)}
+.padbtn small{display:block; font-family:var(--f-body); font-size:9px; letter-spacing:.06em; color:var(--dust)}
+.keys{display:flex; flex-wrap:wrap; gap:8px 20px; color:var(--dust); font-size:13px}
+.keys span{display:inline-flex; align-items:center; gap:7px}
+kbd{font-family:var(--f-body); font-size:11px; font-weight:500; color:var(--paper);
+  background:var(--ink2); border:1px solid var(--line); border-bottom-width:2px;
+  border-radius:5px; padding:2px 7px}
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px}
+.who{border-left:3px solid var(--rust); padding-left:14px}
+.who.b{border-left-color:var(--oasis)}
+.who h2{margin:0 0 2px; font-family:var(--f-display); font-size:17px; color:var(--sand); letter-spacing:.02em}
+.who p{margin:0; font-size:13.5px; color:var(--dust)}
+footer{border-top:1px solid var(--line); padding-top:16px; color:var(--dust); font-size:13px}
+footer .hand{font-family:var(--f-hand); font-size:20px; color:var(--sand); display:block; margin-bottom:4px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">рассказ из тетради — теперь игра</p>
+    <h1>Горелан и Рома</h1>
+    <p class="lede">Двум одиннадцатилетним пацанам с улицы Алексеевка незнакомый дядя дал конфету.
+      Дальше были арена со львом, пустынный муравей, щель под железной дверью и погоня на разваленной машине.</p>
+  </header>
+
+  <div class="cab">
+    <div class="cab-top">
+      <span class="chip" id="chapter">Глава 1 · Конфета от дяди Толи</span>
+      <button class="mute" id="mute" type="button" aria-pressed="false">Звук включён</button>
+    </div>
+    <canvas id="screen" width="480" height="270" aria-label="Игровой экран: Горелан и Рома"></canvas>
+    <div class="pad" id="pad">
+      <div class="padside">
+        <button class="padbtn" type="button" data-btn="L" aria-label="Влево">◀</button>
+        <button class="padbtn" type="button" data-btn="R" aria-label="Вправо">▶</button>
+      </div>
+      <div class="padside">
+        <button class="padbtn" type="button" data-btn="U" aria-label="Вверх, взять">▲<small>ВЗЯТЬ</small></button>
+        <button class="padbtn" type="button" data-btn="B" aria-label="Кувырок">X<small>КУВЫРОК</small></button>
+        <button class="padbtn" type="button" data-btn="A" aria-label="Действие">Z<small>УДАР</small></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="keys">
+    <span><kbd>←</kbd><kbd>→</kbd> ходить</span>
+    <span><kbd>Z</kbd> / <kbd>пробел</kbd> удар, дальше</span>
+    <span><kbd>X</kbd> кувырок</span>
+    <span><kbd>↑</kbd> взять, войти</span>
+    <span><kbd>Esc</kbd> глава заново</span>
+  </div>
+
+  <div class="cards">
+    <div class="who">
+      <h2>Горелан</h2>
+      <p>11 лет. Спортивный, дерётся лучше всех во дворе. Знает язык той деревни — он там родился.
+        Боится только пустынных муравьёв, и у него есть причина.</p>
+    </div>
+    <div class="who b">
+      <h2>Рома</h2>
+      <p>11 лет. Рассказчик. Не дерётся, зато первым нашёл выход — щель между железной дверью и полом.</p>
+    </div>
+  </div>
+
+  <footer>
+    <span class="hand">«Будут ли следующие приключения Горелана и Ромы — неизвестно. КОНЕЦ»</span>
+    Игра по рассказу «Горелан и Рома». Восемь глав, бой на арене, пустыня и погоня.
+    Прогресс сохраняется в браузере, главы можно выбирать на титульном экране.
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* ---------- экран ---------- */
+var W=480,H=270;
+var cv=document.getElementById('screen'), ctx=cv.getContext('2d');
+var chapterEl=document.getElementById('chapter');
+function fitCanvas(){
+  var r=cv.getBoundingClientRect(); if(!r.width) return;
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  var bw=Math.max(480,Math.min(1600,Math.round(r.width*dpr)));
+  if(cv.width!==bw){ cv.width=bw; cv.height=Math.round(bw*H/W); }
+}
+window.addEventListener('resize',fitCanvas);
+
+/* ---------- ввод ---------- */
+var down={}, hit={};
+var MAP={ArrowLeft:'L',KeyA:'L',ArrowRight:'R',KeyD:'R',ArrowUp:'U',KeyW:'U',ArrowDown:'D',KeyS:'D',
+  Space:'A',KeyZ:'A',Enter:'A',NumpadEnter:'A',KeyX:'B',ShiftLeft:'B',ShiftRight:'B',Escape:'P'};
+function vpress(v){ if(!down[v]) hit[v]=true; down[v]=true; }
+function vrelease(v){ down[v]=false; }
+window.addEventListener('keydown',function(e){
+  var v=MAP[e.code]; if(!v) return;
+  if(!e.repeat) vpress(v); else down[v]=true;
+  if(v!=='P') e.preventDefault();
+});
+window.addEventListener('keyup',function(e){ var v=MAP[e.code]; if(v) vrelease(v); });
+window.addEventListener('blur',function(){ down={}; });
+(function(){
+  var pad=document.getElementById('pad');
+  Array.prototype.forEach.call(pad.querySelectorAll('[data-btn]'),function(b){
+    var v=b.getAttribute('data-btn');
+    b.addEventListener('pointerdown',function(e){e.preventDefault(); b.setPointerCapture(e.pointerId); audioOn(); vpress(v);});
+    ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
+      b.addEventListener(ev,function(e){e.preventDefault(); vrelease(v);});
+    });
+  });
+})();
+function isDown(v){return !!down[v]}
+function press(v){return !!hit[v]}
+
+/* ---------- звук ---------- */
+var AC=null, muted=false;
+function audioOn(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } 
+  if(AC&&AC.state==='suspended') AC.resume(); }
+window.addEventListener('keydown',audioOn,{once:true});
+cv.addEventListener('pointerdown',audioOn);
+var muteBtn=document.getElementById('mute');
+muteBtn.addEventListener('click',function(){
+  muted=!muted; muteBtn.textContent=muted?'Звук выключен':'Звук включён';
+  muteBtn.setAttribute('aria-pressed',muted?'true':'false');
+});
+function tone(freq,dur,type,vol,slide){
+  if(muted||!AC) return;
+  try{
+    var o=AC.createOscillator(), g=AC.createGain(), t=AC.currentTime;
+    o.type=type||'square'; o.frequency.setValueAtTime(freq,t);
+    if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(40,slide),t+dur);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol||0.06,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+dur+0.02);
+  }catch(e){}
+}
+function noise(dur,vol){
+  if(muted||!AC) return;
+  try{
+    var n=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0);
+    for(var i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    var s=AC.createBufferSource(), g=AC.createGain();
+    s.buffer=b; g.gain.value=vol||0.08; s.connect(g); g.connect(AC.destination); s.start();
+  }catch(e){}
+}
+function sfx(k){
+  switch(k){
+    case 'talk': tone(420,0.04,'square',0.025); break;
+    case 'hit': noise(0.09,0.09); tone(180,0.09,'square',0.05,90); break;
+    case 'heavy': noise(0.18,0.13); tone(90,0.22,'sawtooth',0.07,45); break;
+    case 'hurt': tone(300,0.22,'sawtooth',0.07,80); break;
+    case 'pick': tone(660,0.08,'triangle',0.06); tone(990,0.1,'triangle',0.05); break;
+    case 'step': tone(120,0.03,'square',0.02); break;
+    case 'win': [523,659,784,1046].forEach(function(f,i){setTimeout(function(){tone(f,0.16,'triangle',0.06)},i*100)}); break;
+    case 'lose': [392,330,262].forEach(function(f,i){setTimeout(function(){tone(f,0.22,'sawtooth',0.05)},i*130)}); break;
+    case 'boom': noise(0.5,0.16); tone(70,0.5,'sawtooth',0.09,30); break;
+    case 'drink': tone(500,0.07,'sine',0.05,900); break;
+    case 'car': tone(70,0.3,'sawtooth',0.03,60); break;
+    case 'alarm': tone(880,0.15,'square',0.05,440); break;
+  }
+}
+
+/* ---------- примитивы ---------- */
+function R(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); }
+function C(x,y,r,c){ ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,r,0,6.2832); ctx.fill(); }
+function EL(x,y,rx,ry,c){ ctx.fillStyle=c; ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,6.2832); ctx.fill(); }
+var FD='"Russo One","Arial Black",sans-serif', FB='"Rubik",system-ui,sans-serif', FH='"Caveat",cursive';
+function T(s,x,y,o){
+  o=o||{};
+  ctx.font=(o.weight?o.weight+' ':'')+(o.size||10)+'px '+(o.font||FB);
+  ctx.textAlign=o.align||'left'; ctx.textBaseline=o.base||'alphabetic';
+  if(o.shadow!==false){ ctx.fillStyle=o.shadowColor||'rgba(0,0,0,.6)'; ctx.fillText(s,x+1,y+1); }
+  ctx.fillStyle=o.color||'#F6ECD8'; ctx.fillText(s,x,y);
+}
+function measure(s,size,font,weight){ ctx.font=(weight?weight+' ':'')+size+'px '+(font||FB); return ctx.measureText(s).width; }
+function wrap(s,maxW,size,font){
+  ctx.font=size+'px '+(font||FB);
+  var words=s.split(' '), lines=[], cur='';
+  for(var i=0;i<words.length;i++){
+    var t=cur?cur+' '+words[i]:words[i];
+    if(ctx.measureText(t).width>maxW && cur){ lines.push(cur); cur=words[i]; } else cur=t;
+  }
+  if(cur) lines.push(cur);
+  return lines;
+}
+function shake(n){ if(n>0){ ctx.translate((Math.random()-0.5)*n,(Math.random()-0.5)*n); } }
+
+/* ---------- персонажи ---------- */
+var GOR={skin:'#7B4B2F',dark:'#5C3721',hair:'#221510',shirt:'#D8452F',shirtD:'#A33623',
+  pants:'#2E4F7C',pantsD:'#223C5F',shoe:'#EDE6D8',eye:'#FFF6E4'};
+var ROM={skin:'#F0C6A0',dark:'#D2A17C',hair:'#B37C3B',shirt:'#4EA07C',shirtD:'#3A7A5E',
+  pants:'#4C4C55',pantsD:'#3A3A42',shoe:'#EDE6D8',eye:'#FFF6E4'};
+
+/* Горелан крупнее Ромы на пару пикселей в плечах — спортивный, но обычный пацан 11 лет */
+function kid(x,y,o){
+  o=o||{}; var p=o.pal||ROM, f=o.face||1, t=o.t||0, pose=o.pose||'idle', big=o.big?1:0;
+  ctx.save(); ctx.translate(Math.round(x),Math.round(y));
+  if(f<0) ctx.scale(-1,1);
+  if(pose==='roll'){
+    ctx.translate(0,-11); ctx.rotate((o.t||0)*14*(f<0?-1:1));
+    C(0,0,10,p.shirt); C(0,0,10-3,p.shirtD); C(3,-2,4,p.skin); R(-9,-1,18,2,p.pantsD);
+    ctx.restore(); return;
+  }
+  if(pose==='lie'){ ctx.rotate(-1.5708); ctx.translate(-4,-2); pose='idle'; }
+  var bob=(pose==='walk')?Math.round(Math.sin(t*11)*1):0;
+  var sw=(pose==='walk')?Math.sin(t*11):0;
+  var crouch=(pose==='scared')?6:0;
+  var sx=(pose==='scared')?Math.round(Math.sin(t*40)*1):0;
+  ctx.translate(sx,crouch);
+  // ноги
+  var lo=Math.round(sw*3);
+  R(-5+lo,-9,4,9,p.pants); R(1-lo,-9,4,9,p.pantsD);
+  R(-5+lo,-1,5,2,p.shoe); R(1-lo,-1,5,2,p.shoe);
+  // туловище
+  var ty=-21+bob, tw=10+big*2;
+  R(-tw/2,ty,tw,12,p.shirt);
+  R(-tw/2,ty,tw,3,p.shirtD);
+  R(f>0?tw/2-3:-tw/2,ty+4,3,8,p.shirtD);
+  // руки
+  var arm=p.skin, ay=ty+3;
+  if(pose==='attack'){
+    var pr=Math.min(1,(o.atk||0)*3.2);
+    R(-2,ay-3+bob,4+Math.round(pr*11),4,arm);      // передняя рука вперёд
+    R(-tw/2-3,ay+2,3,9,arm);
+  } else if(pose==='scared'){
+    R(-tw/2-3,ty-4,3,7,arm); R(tw/2,ty-4,3,7,arm);
+  } else {
+    R(-tw/2-3,ay-Math.round(sw*2),3,10,arm);
+    R(tw/2,ay+Math.round(sw*2),3,10,arm);
+  }
+  // голова
+  var hy=ty-11;
+  R(-5,hy,11,11,p.skin); R(-5,hy+8,11,3,p.dark);
+  if(o.hairStyle==='curls'){
+    R(-6,hy-4,13,5,p.hair);
+    R(-7,hy-1,2,4,p.hair); R(6,hy-1,2,4,p.hair);
+    R(-4,hy-6,3,3,p.hair); R(0,hy-7,4,3,p.hair); R(4,hy-6,3,3,p.hair);
+  } else {
+    R(-6,hy-3,13,5,p.hair); R(-6,hy+1,3,3,p.hair);
+    R(f>0?3:-6,hy-4,4,3,p.hair);
+  }
+  // лицо
+  var ex=f>0?1:-3;
+  if(pose==='scared'){ R(ex,hy+3,3,3,p.eye); R(ex+1,hy+4,1,1,'#2A1A12'); R(ex-4,hy+3,3,3,p.eye); R(ex-3,hy+4,1,1,'#2A1A12'); R(ex-2,hy+8,4,2,'#2A1410'); }
+  else { R(ex,hy+4,2,2,p.eye); R(ex+1,hy+4,1,2,'#2A1A12'); R(ex-4,hy+4,2,2,p.eye); R(ex-3,hy+4,1,2,'#2A1A12'); R(ex-2,hy+8,3,1,p.dark); }
+  // оружие
+  if(o.weapon==='hammer'){
+    var hx=f>0?6:-6, sp=pose==='attack'?Math.min(1,(o.atk||0)*3.2):0;
+    ctx.save(); ctx.translate(hx,ty+2); ctx.rotate((sp?1.5:-0.5));
+    R(-1,-2,3,18,'#8A5C33'); R(-6,14,13,9,'#6D7076'); R(-6,14,13,3,'#8E9298');
+    ctx.restore();
+  } else if(o.weapon==='sword'){
+    var sx2=f>0?5:-5, ang=pose==='attack'?Math.min(1,(o.atk||0)*3.2)*1.7-0.9:-0.9;
+    ctx.save(); ctx.translate(sx2,ty+5); ctx.scale(f>0?1:-1,1); ctx.rotate(ang);
+    R(0,-1,3,7,'#7A4B2A'); R(-2,-2,7,2,'#C8A24A'); R(0,-22,3,20,'#D9DEE6'); R(1,-22,1,20,'#F4F7FB');
+    ctx.restore();
+  }
+  ctx.restore();
+}
+function head(x,y,pal,style,f){
+  ctx.save(); ctx.translate(x,y); if(f<0)ctx.scale(-1,1);
+  R(-6,-6,12,12,pal.skin); R(-6,3,12,3,pal.dark);
+  if(style==='curls'){ R(-7,-10,14,5,pal.hair); R(-8,-7,2,4,pal.hair); R(6,-7,2,4,pal.hair);
+    R(-5,-12,4,3,pal.hair); R(0,-13,4,3,pal.hair); R(4,-12,3,3,pal.hair); }
+  else { R(-7,-10,14,6,pal.hair); R(-7,-5,3,4,pal.hair); R(3,-11,5,3,pal.hair); }
+  R(1,-2,2,3,pal.eye); R(2,-2,1,3,'#2A1A12'); R(-4,-2,2,3,pal.eye); R(-3,-2,1,3,'#2A1A12');
+  R(-2,3,4,1,pal.dark);
+  ctx.restore();
+}
+
+var TOL={coat:'#2C3140',coatD:'#20242F',skin:'#DFB694',dark:'#BE9375',hat:'#171A22',eye:'#FFF6E4'};
+var VIL={robe:'#B8894C',robeD:'#8F6836',skin:'#A9713F',dark:'#85552C',wrap:'#E7D6AF'};
+var GRD={suit:'#454B60',suitD:'#333850',skin:'#D8AE8B',cap:'#22263A'};
+
+function adult(x,y,o){
+  o=o||{}; var f=o.face||1, t=o.t||0, walk=o.walk?Math.sin(t*9):0;
+  ctx.save(); ctx.translate(Math.round(x),Math.round(y)); if(f<0) ctx.scale(-1,1);
+  var p=o.pal||TOL;
+  R(-6+walk*3,-14,5,14,p.coatD||p.suitD||p.robeD); R(1-walk*3,-14,5,14,p.coatD||p.suitD||p.robeD);
+  R(-6+walk*3,-2,6,2,'#15151A'); R(1-walk*3,-2,6,2,'#15151A');
+  R(-7,-32,14,19,p.coat||p.suit||p.robe);
+  R(-7,-32,14,4,p.coatD||p.suitD||p.robeD);
+  R(-10,-30,3,15,p.skin); R(7,-30,3,15,p.skin);
+  R(-6,-45,12,13,p.skin); R(-6,-36,12,3,p.dark||p.skin);
+  if(o.kind==='tolya'){ R(-9,-49,18,4,p.hat); R(-7,-52,14,4,p.hat); }
+  if(o.kind==='guard'){ R(-8,-48,16,4,p.cap); R(-6,-51,12,4,p.cap); R(-6,-41,12,3,'#0C0C10');
+    R(-11,-28,4,8,'#C24A2C'); R(-7,-30,14,2,'#2A2E3C'); }
+  if(o.kind==='villager'){ R(-8,-49,17,7,VIL.wrap); R(-9,-45,3,10,VIL.wrap); R(-3,-35,7,4,'#4A3A2A'); }
+  if(o.kind!=='guard'){
+    R(2,-41,2,3,p.eye||'#FFF'); R(2,-41,1,3,'#221A14');
+    R(-3,-41,2,3,p.eye||'#FFF'); R(-3,-41,1,3,'#221A14');
+  }
+  if(o.smile) R(-3,-36,7,2,'#F2E7D5');
+  ctx.restore();
+}
+
+/* ---------- диалоги ---------- */
+var SPK={
+  gorelan:{n:'Горелан',c:'#F4A63C',draw:function(x,y){head(x,y,GOR,'curls',1)}},
+  roma:{n:'Рома',c:'#43A894',draw:function(x,y){head(x,y,ROM,'flat',1)}},
+  both:{n:'Горелан и Рома',c:'#E9C87C',draw:function(x,y){head(x-4,y,GOR,'curls',1);head(x+5,y+1,ROM,'flat',1)}},
+  tolya:{n:'дядя Толя',c:'#B9A0D8',draw:function(x,y){
+    ctx.save();ctx.translate(x,y);R(-6,-6,12,12,TOL.skin);R(-9,-10,18,4,TOL.hat);R(-7,-13,14,4,TOL.hat);
+    R(1,-2,2,3,'#FFF6E4');R(1,-2,1,3,'#221A14');R(-4,-2,2,3,'#FFF6E4');R(-4,-2,1,3,'#221A14');
+    R(-3,3,7,2,'#F2E7D5');ctx.restore()}},
+  villager:{n:'житель деревни',c:'#C9A66B',draw:function(x,y){
+    ctx.save();ctx.translate(x,y);R(-6,-6,12,12,VIL.skin);R(-8,-10,17,6,VIL.wrap);R(-9,-6,3,9,VIL.wrap);
+    R(1,-2,2,3,'#FFF6E4');R(1,-2,1,3,'#221A14');R(-4,-2,2,3,'#FFF6E4');R(-4,-2,1,3,'#221A14');
+    R(-3,3,7,3,'#4A3A2A');ctx.restore()}},
+  narr:{n:'',c:'#A08D7B',draw:null}
+};
+function Dialog(lines,onDone){
+  return {
+    lines:lines,i:0,c:0,done:false,_last:0,
+    update:function(dt){
+      if(this.done) return;
+      var L=this.lines[this.i];
+      if(!L){ this.done=true; if(onDone)onDone(); return; }
+      var full=L[1];
+      if(this.c<full.length){
+        this.c+=dt*60;
+        if(Math.floor(this.c)>this._last+2){ this._last=Math.floor(this.c); sfx('talk'); }
+        if(this.c>full.length) this.c=full.length;
+      }
+      if(press('A')){
+        if(this.c<full.length){ this.c=full.length; }
+        else { this.i++; this.c=0; this._last=0;
+          if(this.i>=this.lines.length){ this.done=true; if(onDone)onDone(); } }
+      }
+    },
+    draw:function(){
+      var L=this.lines[this.i]; if(!L) return;
+      var sp=SPK[L[0]]||SPK.narr, x=12,y=206,w=456,h=56;
+      ctx.globalAlpha=.93; R(x,y,w,h,'#140F0C'); ctx.globalAlpha=1;
+      R(x,y,w,1,'#E9C87C'); R(x,y+h-1,w,1,'#E9C87C'); R(x,y,1,h,'#E9C87C'); R(x+w-1,y,1,h,'#E9C87C');
+      var tx=x+12;
+      if(sp.draw){
+        var nw=measure(sp.n,9,FB,'500')+14;
+        R(x+6,y-13,nw,13,'#140F0C'); R(x+6,y-13,nw,1,sp.c);
+        R(x+6,y-13,1,13,sp.c); R(x+6+nw-1,y-13,1,13,sp.c);
+        T(sp.n,x+13,y-4,{size:9,color:sp.c,weight:'500'});
+        sp.draw(x+22,y+28); tx=x+44;
+      }
+      var lines=wrap(L[1],w-(tx-x)-18,11,FB), shown=Math.floor(this.c), used=0;
+      for(var i=0;i<lines.length && i<3;i++){
+        var s=lines[i], vis=Math.max(0,Math.min(s.length,shown-used));
+        T(s.slice(0,vis),tx,y+19+i*15,{size:11,color:sp===SPK.narr?'#CDBBA5':'#F6ECD8'});
+        used+=s.length+1;
+      }
+      if(shown>=L[1].length && Math.floor(now*2)%2===0)
+        T('▼',x+w-16,y+h-8,{size:9,color:'#F4A63C'});
+    }
+  };
+}
+
+/* ---------- сцены ---------- */
+var S={}, cur=null, curName='', now=0;
+var fade=0, fadeDir=0, fadeTo=null, fadeArg=null;
+function go(n,o){ curName=n; cur=S[n](o||{}); updateChip(); }
+function goFade(n,o){ fadeDir=1; fadeTo=n; fadeArg=o||{}; }
+var CH=[
+  {id:'bench',n:'Глава 1',t:'Конфета от дяди Толи'},
+  {id:'cell',n:'Глава 2',t:'Комната без окон'},
+  {id:'arena',n:'Глава 3',t:'Арена'},
+  {id:'escape',n:'Глава 4',t:'Щель под дверью'},
+  {id:'desert',n:'Глава 5',t:'Как в печке'},
+  {id:'village',n:'Глава 6',t:'Источник'},
+  {id:'chase',n:'Глава 7',t:'Погоня'},
+  {id:'ending',n:'Финал',t:'Улица Алексеевка'}
+];
+var chIndex=0;
+function updateChip(){
+  if(curName==='title'||curName==='select') chapterEl.textContent='Титульный экран';
+  else chapterEl.textContent=CH[chIndex].n+' · '+CH[chIndex].t;
+}
+function saveProg(i){ try{ var p=loadProg(); if(i>p) localStorage.setItem('gr_progress',String(i)); }catch(e){} }
+function loadProg(){ try{ return parseInt(localStorage.getItem('gr_progress')||'0',10)||0; }catch(e){ return 0; } }
+function startChapter(i){ chIndex=i; saveProg(i); goFade('card',{i:i}); }
+function nextChapter(){ if(chIndex<CH.length-1) startChapter(chIndex+1); else goFade('title',{}); }
+function restartChapter(){ goFade(CH[chIndex].id,{}); }
+
+/* заставка главы */
+S.card=function(o){
+  var i=o.i||0, t=0;
+  return { update:function(dt){ t+=dt; if(t>2.1||press('A')) goFade(CH[i].id,{}); },
+    draw:function(){
+      R(0,0,W,H,'#120E0C');
+      for(var k=0;k<40;k++){ var sx=(k*97)%W, sy=(k*53)%H; R(sx,sy,1,1,'rgba(233,200,124,'+(0.05+(k%5)*0.02)+')'); }
+      var a=Math.min(1,t*3);
+      ctx.globalAlpha=a;
+      R(60,116,4,40,'#C24A2C');
+      T(CH[i].n.toUpperCase(),76,132,{size:13,font:FB,weight:'500',color:'#F4A63C'});
+      T(CH[i].t,76,158,{size:26,font:FD,color:'#E9C87C'});
+      ctx.globalAlpha=1;
+    }};
+};
+
+/* ---------- титульный экран ---------- */
+function nightStreet(t,dim){
+  var g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#1A1B33'); g.addColorStop(0.55,'#3A2A38'); g.addColorStop(1,'#5A3A32');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  for(var k=0;k<46;k++){ var sx=(k*83+13)%W, sy=(k*37)%110;
+    R(sx,sy,1,1,'rgba(255,245,220,'+(0.25+0.45*Math.abs(Math.sin(t*1.3+k)))+')'); }
+  C(404,44,13,'#F3E6C0'); C(399,40,11,'#3A2A38');
+  var hs=[[0,150,60,80],[54,132,44,98],[96,158,70,72],[164,140,50,90],[212,164,64,66],[274,146,58,84],
+          [330,160,52,70],[380,138,46,92],[424,156,60,74]];
+  for(var i=0;i<hs.length;i++){
+    var h=hs[i]; R(h[0],h[1],h[2],h[3],'#241A26');
+    for(var wx=h[0]+6;wx<h[0]+h[2]-6;wx+=14) for(var wy=h[1]+8;wy<h[1]+h[3]-16;wy+=18)
+      R(wx,wy,7,8,((wx+wy)%3===0)?'#F4C86A':'#1A1320');
+  }
+  R(0,214,W,56,'#2A2028'); R(0,214,W,2,'#3E3038');
+  for(var d=8;d<W;d+=32) R(d,240,18,2,'#4A3A40');
+  R(40,150,4,66,'#1C1620'); R(28,142,28,4,'#1C1620'); C(42,146,9,'rgba(244,200,90,.22)'); C(42,146,4,'#F6D583');
+  if(dim){ ctx.fillStyle='rgba(10,7,6,'+dim+')'; ctx.fillRect(0,0,W,H); }
+}
+function bench(x,y){
+  R(x,y,74,5,'#8A5C33'); R(x,y+5,74,2,'#6B4526');
+  R(x,y-12,74,5,'#8A5C33'); R(x+2,y+7,5,16,'#3A2A22'); R(x+67,y+7,5,16,'#3A2A22');
+  R(x+2,y-12,5,12,'#3A2A22'); R(x+67,y-12,5,12,'#3A2A22');
+}
+S.title=function(){
+  var t=0, sel=0, prog=loadProg();
+  var items=[{l:'Играть с начала',a:function(){startChapter(0)}}];
+  if(prog>0) items.push({l:'Продолжить · '+CH[prog].n,a:function(){startChapter(prog)}});
+  if(prog>0) items.push({l:'Выбрать главу',a:function(){goFade('select',{})}});
+  return { update:function(dt){
+      t+=dt;
+      if(press('U')){ sel=(sel+items.length-1)%items.length; sfx('pick'); }
+      if(press('D')){ sel=(sel+1)%items.length; sfx('pick'); }
+      if(press('A')){ sfx('win'); items[sel].a(); }
+    },
+    draw:function(){
+      nightStreet(t,0.18);
+      kid(172,226,{pal:GOR,hairStyle:'curls',pose:'idle',face:1,big:1,t:t});
+      kid(202,226,{pal:ROM,pose:'idle',face:1,t:t});
+      bench(148,214);
+      ctx.globalAlpha=.74; R(0,26,W,120,'#120E0C'); ctx.globalAlpha=1;
+      R(0,146,W,1,'rgba(233,200,124,.18)');
+      T('ГОРЕЛАН',44,84,{size:44,font:FD,color:'#E9C87C',shadowColor:'#C24A2C'});
+      T('И РОМА',44,120,{size:44,font:FD,color:'#F4A63C',shadowColor:'#C24A2C'});
+      T('одиннадцать лет, одна конфета, одна арена',46,140,{size:15,font:FH,color:'#CDBBA5'});
+      for(var i=0;i<items.length;i++){
+        var y=170+i*20, on=i===sel;
+        if(on){ R(40,y-11,measure(items[i].l,12,FB,'500')+26,16,'rgba(244,166,60,.18)');
+          T('▸',44,y,{size:11,color:'#F4A63C'}); }
+        T(items[i].l,58,y,{size:12,weight:'500',color:on?'#F6ECD8':'#A08D7B'});
+      }
+      if(Math.floor(t*1.6)%2===0)
+        T('↑ ↓ — выбрать · Z или ПРОБЕЛ — начать',44,248,{size:9,color:'#A08D7B'});
+    }};
+};
+S.select=function(){
+  var prog=loadProg(), sel=prog, t=0;
+  return { update:function(dt){
+      t+=dt;
+      if(press('U')){ sel=(sel+prog+1-1)%(prog+1); sfx('pick'); }
+      if(press('D')){ sel=(sel+1)%(prog+1); sfx('pick'); }
+      if(press('A')){ startChapter(sel); }
+      if(press('P')) goFade('title',{});
+    },
+    draw:function(){
+      nightStreet(t,0.6);
+      T('ВЫБОР ГЛАВЫ',30,42,{size:20,font:FD,color:'#E9C87C'});
+      for(var i=0;i<=prog;i++){
+        var y=68+i*20, on=i===sel;
+        if(on) R(26,y-12,300,17,'rgba(244,166,60,.18)');
+        T(CH[i].n,32,y,{size:10,color:on?'#F4A63C':'#8A7967',weight:'500'});
+        T(CH[i].t,86,y,{size:12,color:on?'#F6ECD8':'#A08D7B'});
+      }
+      T('Esc — назад',32,250,{size:9,color:'#A08D7B'});
+    }};
+};
+
+/* ---------- глава 1: скамейка ---------- */
+S.bench=function(){
+  var t=0, ph='in', tx=520, flash=0, fallT=0, chosen=false, eaten=false;
+  var d=null;
+  function talk(lines,after){ d=Dialog(lines,after); }
+  var part1=[
+    ['tolya','Привет.'],
+    ['both','Привет.'],
+    ['gorelan','Мне когда-то давно, когда мне было пять лет, мама говорила: не разговаривай с незнакомыми дядями.'],
+    ['tolya','Меня зовут дядя Толя. А тебя?'],
+    ['gorelan','Меня зовут Гор... а нет. Зови меня Сиреноголовый.'],
+    ['roma','А меня зовут Рома.'],
+    ['tolya','Вот и познакомились. Молодцы. Нате конфетку.'],
+    ['both','Спасибо.'],
+    ['gorelan','Хм. Почему этот дядя дал нам конфету просто так? Может, она отравлена?']
+  ];
+  var part2=[
+    ['roma','Не знаю, но очень вкусная.'],
+    ['gorelan','Ты что! Вдруг она отравлена!'],
+    ['roma','Ничего не знаю, со мной ничего не случилось. Значит, не отравлена.'],
+    ['gorelan','Ну ладно, тогда и я съем свою. Ням-ням-ням. Как вкусно!'],
+    ['gorelan','Интересно, сколько стоят такие вкусные конфеты? Я когда был в магазине, таких не видел.']
+  ];
+  return {
+    update:function(dt){
+      t+=dt;
+      if(ph==='in'){ tx-=70*dt; if(tx<=300){ tx=300; ph='talk'; talk(part1,function(){ ph='choice'; }); } }
+      else if(ph==='talk'||ph==='talk2'){ if(d) d.update(dt); }
+      else if(ph==='choice'){
+        if(press('A')){ chosen=true; eaten=true; sfx('pick'); ph='talk2'; talk(part2,function(){ ph='bang'; t=0; }); }
+        else if(press('B')){ chosen=true; sfx('pick'); ph='talk2';
+          talk([['roma','Ладно, не буду.'],['gorelan','Правильно!'],
+                ['narr','Прошла ровно одна минута. Конфета так вкусно пахла, что Рома всё-таки её съел.']].concat(part2),
+               function(){ ph='bang'; t=0; }); }
+      }
+      else if(ph==='bang'){
+        flash=Math.max(0,1-t*2.4); fallT=Math.min(1,t*1.4);
+        if(t===0) sfx('boom');
+        if(t>0.05&&t<0.09) sfx('lose');
+        if(t>3.2){ nextChapter(); }
+      }
+    },
+    draw:function(){
+      ctx.save();
+      if(ph==='bang') shake(Math.max(0,4-t*4));
+      nightStreet(t,0.1);
+      var fallen=ph==='bang'&&fallT>0.2;
+      kid(172,fallen?230:226,{pal:GOR,hairStyle:'curls',pose:fallen?'lie':'idle',face:1,big:1,t:t});
+      kid(202,fallen?230:226,{pal:ROM,pose:fallen?'lie':'idle',face:1,t:t});
+      bench(148,214);
+      if(ph!=='bang') adult(tx,214,{pal:TOL,kind:'tolya',face:-1,walk:ph==='in',t:t,smile:true});
+      if(ph==='choice'){
+        R(120,150,240,44,'rgba(20,15,12,.94)'); R(120,150,240,1,'#E9C87C'); R(120,193,240,1,'#E9C87C');
+        T('Съесть конфету?',132,168,{size:12,weight:'500',color:'#F6ECD8'});
+        T('[Z] съесть',132,185,{size:10,color:'#F4A63C'});
+        T('[X] не есть',232,185,{size:10,color:'#43A894'});
+      }
+      if(ph==='bang'){
+        if(t<1.2) T('БУХ!',W/2,120,{size:40,font:FD,color:'#F6ECD8',align:'center',shadowColor:'#C24A2C'});
+        ctx.fillStyle='rgba(10,7,6,'+Math.min(1,Math.max(0,(t-1.1)/1.6))+')'; ctx.fillRect(0,0,W,H);
+        if(flash>0){ ctx.fillStyle='rgba(255,248,230,'+flash+')'; ctx.fillRect(0,0,W,H); }
+      }
+      ctx.restore();
+      if((ph==='talk'||ph==='talk2')&&d) d.draw();
+    }};
+};
+
+/* ---------- глава 2: комната без окон ---------- */
+S.cell=function(){
+  var t=0, x=64, face=1, up=false, d=null, trig={a:false,b:false}, dragX=520, ph='wake';
+  var walkT=0;
+  d=Dialog([['narr','Рома очнулся. Каменный пол, одна лампа, и где-то далеко кричит Горелан.'],
+            ['roma','Где это я?..']],function(){ ph='play'; });
+  return {
+    update:function(dt){
+      t+=dt;
+      if(ph==='wake'){ d.update(dt); return; }
+      if(ph==='drag'){ d.update(dt); dragX-=40*dt; if(d.done) ph='play'; return; }
+      var mv=0;
+      if(isDown('L')) mv=-1; if(isDown('R')) mv=1;
+      if(mv){ face=mv; x+=mv*62*dt; walkT+=dt; up=true; if(Math.floor(walkT*6)!==Math.floor((walkT-dt)*6)) sfx('step'); }
+      else up=false;
+      x=Math.max(26,Math.min(452,x));
+      if(!trig.a && x>150){ trig.a=true; ph='drag'; sfx('alarm');
+        d=Dialog([['gorelan','ПОМОГИТЕ!!!'],
+                  ['narr','Двое в чёрном тащат Горелана куда-то наверх.'],
+                  ['roma','Горелан! Рядом лестница — я поднимусь!']],function(){ ph='play'; }); }
+      if(x>410){
+        if(press('U')){ sfx('win'); nextChapter(); }
+      }
+    },
+    draw:function(){
+      R(0,0,W,H,'#1A1410');
+      for(var bx=0;bx<W;bx+=32) for(var by=40;by<220;by+=18)
+        R(bx+((by/18)%2?0:16),by,30,16,((bx+by)%64===0)?'#241C16':'#201911');
+      R(0,214,W,56,'#151009'); R(0,214,W,2,'#2C221A');
+      // лампа
+      R(96,0,3,26,'#2C221A'); C(97,30,8,'#F4C86A');
+      var g=ctx.createRadialGradient(97,30,4,97,30,150);
+      g.addColorStop(0,'rgba(244,200,106,.28)'); g.addColorStop(1,'rgba(244,200,106,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      // лестница
+      R(410,60,44,156,'#2A211A');
+      for(var s=0;s<8;s++) R(412,196-s*18,40,6,'#4A3A2A');
+      T('наверх',432,52,{size:9,color:'#A08D7B',align:'center'});
+      if(ph==='drag'||dragX<520){
+        adult(dragX,150,{pal:GRD,kind:'guard',face:-1,walk:true,t:t});
+        kid(dragX+26,150,{pal:GOR,hairStyle:'curls',pose:'scared',face:-1,big:1,t:t});
+        adult(dragX+50,150,{pal:GRD,kind:'guard',face:-1,walk:true,t:t});
+      }
+      kid(x,214,{pal:ROM,pose:ph==='wake'?'lie':(up?'walk':'idle'),face:face,t:walkT});
+      if(ph==='play'&&x>410&&Math.floor(t*2)%2===0)
+        T('[↑] подняться',x,166,{size:10,color:'#F4A63C',align:'center'});
+      else if(ph==='play'&&Math.floor(t*0.9)%2===0&&x<150)
+        T('← → идти',x,170,{size:9,color:'#A08D7B',align:'center'});
+      ctx.fillStyle='rgba(8,5,4,.45)';
+      var v=ctx.createRadialGradient(x,170,40,x,170,230);
+      v.addColorStop(0,'rgba(8,5,4,0)'); v.addColorStop(1,'rgba(8,5,4,.72)');
+      ctx.fillStyle=v; ctx.fillRect(0,0,W,H);
+      if(ph!=='play') d.draw();
+    }};
+};
+
+/* ---------- глава 3: арена ---------- */
+var GROUND=214, WALL_L=30, WALL_R=450;
+function dmgOf(weapon,kind){
+  if(weapon==='hammer') return kind==='fat'?0:3;
+  if(weapon==='sword') return 2;
+  return kind==='lion'?1:0;
+}
+function reachOf(w){ return w==='hammer'?32:(w==='sword'?28:20); }
+function swingOf(w){ return w==='hammer'?0.55:(w==='sword'?0.34:0.3); }
+
+function makeLion(){
+  return {kind:'lion',name:'ЛЕВ',hp:5,max:5,x:400,y:GROUND,face:-1,st:'prowl',tm:0,dir:-1,danger:null,dead:0,
+    update:function(dt,P){
+      this.tm+=dt; this.danger=null;
+      if(this.st==='prowl'){
+        this.face=(P.x<this.x)?-1:1; this.x+=this.face*30*dt;
+        if(this.tm>1.9){ this.st='crouch'; this.tm=0; this.dir=this.face; }
+      } else if(this.st==='crouch'){
+        if(this.tm>0.6){ this.st='charge'; this.tm=0; sfx('hurt'); }
+      } else if(this.st==='charge'){
+        this.x+=this.dir*250*dt;
+        this.danger={x:this.x-20,y:this.y-24,w:40,h:24};
+        if(this.x<WALL_L+22||this.x>WALL_R-22||this.tm>1.4){ this.st='stun'; this.tm=0; sfx('heavy'); }
+      } else if(this.st==='stun'){
+        if(this.tm>1.7){ this.st='prowl'; this.tm=0; }
+      }
+      this.x=Math.max(WALL_L+20,Math.min(WALL_R-20,this.x));
+    },
+    box:function(){ return {x:this.x-20,y:this.y-26,w:40,h:26}; },
+    draw:function(t){
+      var x=this.x,y=this.y,f=this.face,cr=this.st==='crouch'?4:0,st=this.st==='stun';
+      ctx.save(); ctx.translate(Math.round(x),Math.round(y)); if(f>0)ctx.scale(-1,1);
+      ctx.translate(0,cr);
+      var wob=this.st==='prowl'?Math.sin(t*9)*2:0;
+      R(-6+wob,-9,5,9,'#B87B35'); R(8-wob,-9,5,9,'#B87B35');
+      R(-14-wob,-9,5,9,'#C98B41'); R(2+wob,-9,5,9,'#C98B41');
+      R(-16,-24,32,16,'#D2913F'); R(-16,-24,32,4,'#DDA255');
+      R(14,-26,6,3,'#8A5A22'); R(19,-30,3,10,'#8A5A22'); R(20,-32,4,4,'#6E4518');
+      C(-16,-20,11,'#8A5A22'); C(-14,-20,8,'#A96C2A');
+      R(-24,-24,10,10,'#D2913F'); R(-26,-22,4,4,'#C98B41');
+      if(st){ R(-24,-21,2,2,'#2A1A12'); R(-19,-21,2,2,'#2A1A12'); }
+      else { R(-24,-21,3,3,'#FFF6E4'); R(-24,-21,2,3,'#2A1A12'); R(-19,-21,3,3,'#FFF6E4'); R(-19,-21,2,3,'#2A1A12'); }
+      R(-27,-16,5,2,'#F2E7D5'); R(-22,-14,3,4,'#F2E7D5');
+      ctx.restore();
+      if(this.st==='crouch') T('!',x,y-42,{size:16,font:FD,color:'#C24A2C',align:'center'});
+      if(st) for(var i=0;i<3;i++) T('*',x-10+i*10,y-40-Math.sin(t*6+i)*3,{size:9,color:'#F4C86A',align:'center'});
+    }};
+}
+function makeAnt(){
+  return {kind:'ant',name:'ПУСТЫННЫЙ МУРАВЕЙ',hp:9,max:9,x:410,y:GROUND,face:-1,st:'walk',tm:0,danger:null,
+    update:function(dt,P){
+      this.tm+=dt; this.danger=null;
+      this.face=(P.x<this.x)?-1:1;
+      if(this.st==='walk'){
+        this.x+=this.face*(P.frozen?26:64)*dt;
+        if(this.tm>1.7&&!P.frozen){ this.st='rear'; this.tm=0; }
+      } else if(this.st==='rear'){
+        if(this.tm>0.4){ this.st='lunge'; this.tm=0; sfx('hit'); }
+      } else if(this.st==='lunge'){
+        this.x+=this.face*230*dt;
+        this.danger={x:this.x-16,y:this.y-18,w:32,h:18};
+        if(this.tm>0.34){ this.st='rest'; this.tm=0; }
+      } else if(this.st==='rest'){
+        if(this.tm>0.8){ this.st='walk'; this.tm=0; }
+      }
+      this.x=Math.max(WALL_L+16,Math.min(WALL_R-16,this.x));
+    },
+    box:function(){ return {x:this.x-16,y:this.y-20,w:32,h:20}; },
+    draw:function(t){
+      var x=this.x,y=this.y,f=this.face, rear=this.st==='rear'?-4:0;
+      ctx.save(); ctx.translate(Math.round(x),Math.round(y)); if(f>0)ctx.scale(-1,1);
+      var lg=Math.sin(t*16)*2;
+      for(var i=0;i<3;i++){ R(-8+i*8,-8,2,8,'#4E2414'); R(-10+i*8+lg,-4,3,5,'#4E2414'); }
+      EL(8,-11,9,7,'#7A3B22'); EL(-2,-12,7,7,'#8E4629'); EL(-13,-13+rear,8,7,'#7A3B22');
+      EL(6,-13,7,4,'#93502F');
+      R(-19,-16+rear,4,3,'#5E2C18'); R(-22,-19+rear,4,4,'#5E2C18');
+      R(-17,-14+rear,2,2,'#F2D06A'); R(-13,-14+rear,2,2,'#F2D06A');
+      R(-20,-24+rear,2,7,'#5E2C18'); R(-15,-25+rear,2,8,'#5E2C18');
+      ctx.restore();
+      if(this.st==='rear') T('!',x,y-38,{size:14,font:FD,color:'#C24A2C',align:'center'});
+    }};
+}
+function makeFat(){
+  return {kind:'fat',name:'ТОЛСТЯК',hp:6,max:6,x:400,y:GROUND,face:-1,st:'walk',tm:0,danger:null,muddy:true,
+    update:function(dt,P){
+      this.tm+=dt; this.danger=null;
+      this.face=(P.x<this.x)?-1:1;
+      if(this.st==='walk'){
+        this.x+=this.face*22*dt;
+        if(this.tm>1.8){ this.st='wind'; this.tm=0; }
+      } else if(this.st==='wind'){
+        if(this.tm>0.5){ this.st='thrust'; this.tm=0; sfx('hit'); }
+      } else if(this.st==='thrust'){
+        var d0=this.face>0?this.x+34:this.x-92;
+        this.danger={x:d0,y:this.y-34,w:58,h:16};
+        if(this.tm>0.3){ this.st='rest'; this.tm=0; }
+      } else if(this.st==='rest'){
+        if(this.tm>0.9){ this.st='walk'; this.tm=0; }
+      }
+      this.x=Math.max(WALL_L+22,Math.min(WALL_R-22,this.x));
+    },
+    box:function(){ return {x:this.x-20,y:this.y-44,w:40,h:44}; },
+    draw:function(t){
+      var x=this.x,y=this.y,f=this.face;
+      var body=this.muddy?'#6B4A2C':'#EFC9A8', bodyD=this.muddy?'#553920':'#D8AC88';
+      ctx.save(); ctx.translate(Math.round(x),Math.round(y)); if(f>0)ctx.scale(-1,1);
+      R(-10,-12,8,12,'#3E4A6B'); R(2,-12,8,12,'#3E4A6B'); R(-10,-2,9,2,'#2A2018'); R(2,-2,9,2,'#2A2018');
+      EL(0,-27,20,17,body); EL(-4,-24,13,11,bodyD);
+      R(-9,-46,18,14,body); R(-9,-36,18,4,bodyD);
+      R(2,-42,3,3,'#FFF6E4'); R(3,-42,2,3,'#221A14'); R(-4,-42,3,3,'#FFF6E4'); R(-3,-42,2,3,'#221A14');
+      R(-3,-36,7,2,'#3A2418');
+      var th=this.st==='thrust'?26:(this.st==='wind'?-8:0);
+      ctx.save(); ctx.translate(-20-th,-34); R(0,0,3,3,body); R(-2,1,38,3,'#8A5C33'); R(34,-1,10,5,'#B9C0C9');
+      ctx.restore();
+      ctx.restore();
+      if(this.st==='wind') T('!',x,y-58,{size:14,font:FD,color:'#C24A2C',align:'center'});
+    }};
+}
+function overlap(a,b){ return a&&b&&a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y; }
+
+S.arena=function(){
+  var t=0, round=0, mode='dialog', d=null, E=null, sh=0, msg='', msgT=0, clap=0, hole=0, win=0;
+  var rack=false, holeX=0;
+  var P={x:150,face:1,hp:6,max:6,state:'idle',atk:0,roll:0,inv:0,wt:0,weapon:'fists',hitDone:false,frozen:false};
+  function flash(s){ msg=s; msgT=1.7; }
+  function startRound(r){
+    round=r; P.hp=P.max; P.state='idle'; P.atk=0; P.roll=0; P.inv=0; P.frozen=false; P.x=150; P.face=1;
+    if(r===0){ P.weapon='fists'; E=makeLion(); mode='fight'; }
+    if(r===1){ rack=true; E=makeAnt(); P.frozen=true; mode='scared'; t=0; }
+    if(r===2){ E=makeFat(); mode='fight'; }
+  }
+  function dlg(lines,after){ d=Dialog(lines,after); mode='dialog'; }
+  dlg([['narr','Рома поднялся по лестнице. Внизу арена, на арене Горелан. И лев.'],
+       ['gorelan','Не спускайся! Я сам!'],
+       ['narr','Z — удар. X — кувырок (в кувырке не задевают). ← → — двигаться.']],
+      function(){ startRound(0); });
+
+  function playerBox(){ return {x:P.x-6,y:GROUND-30,w:12,h:30}; }
+  function hurt(){
+    if(P.inv>0||P.state==='roll') return;
+    P.hp--; P.inv=1.3; sfx('hurt'); sh=5;
+    if(P.hp<=0){ mode='dead'; sfx('lose'); }
+  }
+  return {
+    update:function(dt){
+      t+=dt; if(msgT>0) msgT-=dt; if(sh>0) sh=Math.max(0,sh-dt*12); if(clap>0) clap-=dt;
+      if(mode==='dialog'){ d.update(dt); return; }
+      if(mode==='dead'){
+        if(press('A')){ startRound(round); }
+        return;
+      }
+      if(mode==='scared'){
+        E.update(dt,P);
+        if(t>1.2&&!d){ d=Dialog([['gorelan','Только не он... только не пустынный муравей!'],
+          ['roma','Горелан! Рядом лезвия, ножи, копья, мечи! Возьми молот! [↑] у стойки']],function(){}); }
+        if(d&&!d.done) d.update(dt);
+        if(t>3.0){ P.frozen=false; mode='fight'; flash('КУЛАКИ НЕ БЕРУТ ПАНЦИРЬ'); }
+        return;
+      }
+      if(mode==='win'){
+        win+=dt;
+        if(win>2.2){
+          if(round===0){ dlg([['roma','Он победил льва! Голыми руками!'],
+              ['narr','И на сцену вышел пустынный муравей.']],function(){ startRound(1); }); win=0; }
+          else if(round===1){ dlg([['narr','На сцену вышел другой человек. Он был весь коричневый.'],
+              ['gorelan','Иди сюда, грязный!']],function(){ startRound(2); }); win=0; }
+          else {
+            dlg([['narr','Толстяк с грохотом повалился и сделал в полу гигантскую дыру.'],
+                 ['narr','Люди, стоявшие рядом с Ромой, начали хлопать. Рома тоже начал хлопать.'],
+                 ['roma','Вау, ты так круто дерёшься! А почему ты испугался этого маленького муравья?'],
+                 ['gorelan','Я когда-то давно убежал с мамой из своего дома. И все жители нашей деревни бежали из своих домов — из-за этих муравьёв.'],
+                 ['gorelan','Пустынный муравей так сильно кусается, что от него убегают целыми деревнями.'],
+                 ['gorelan','А когда они облюбуют какое-нибудь дерево — залезают и собирают с него листья. Из листьев они растят грибы, а грибами кормят личинок.'],
+                 ['gorelan','К такому дереву даже подойти боятся.'],
+                 ['roma','Ого. Ладно, нам надо быстрее отсюда убегать!'],
+                 ['both','ПОБЕЖАЛИ!']],function(){ nextChapter(); }); win=0; }
+        }
+        return;
+      }
+      /* --- бой --- */
+      if(P.inv>0) P.inv-=dt;
+      if(P.state==='roll'){
+        P.roll-=dt; P.x+=P.face*160*dt;
+        if(P.roll<=0){ P.state='idle'; }
+      } else if(P.state==='attack'){
+        P.atk+=dt;
+        var w=swingOf(P.weapon);
+        if(!P.hitDone && P.atk>w*0.35 && P.atk<w*0.8){
+          var rr=reachOf(P.weapon);
+          var hb={x:P.face>0?P.x+4:P.x-4-rr,y:GROUND-30,w:rr,h:28};
+          if(overlap(hb,E.box())){
+            P.hitDone=true;
+            var dm=dmgOf(P.weapon,E.kind);
+            if(dm>0){ E.hp-=dm; sh=3; sfx(P.weapon==='hammer'?'heavy':'hit');
+              if(E.hp<=0){ mode='win'; win=0; clap=4; sfx(round===2?'boom':'win'); if(round===2){hole=1;holeX=E.x;} } }
+            else {
+              sfx('hit');
+              if(E.kind==='fat'&&E.muddy){ E.muddy=false;
+                flash('УДАР УТОНУЛ В ЖИРЕ. ОН ПРОСТО БЫЛ В ГРЯЗИ'); }
+              else if(E.kind==='fat') flash('МОЛОТ НЕ БЕРЁТ ЖИР — НУЖЕН МЕЧ [↑]');
+              else flash('КУЛАКИ НЕ БЕРУТ ПАНЦИРЬ — ВОЗЬМИ МОЛОТ [↑]');
+            }
+          }
+        }
+        if(P.atk>w){ P.state='idle'; P.atk=0; P.hitDone=false; }
+      } else {
+        var mv=0; if(isDown('L'))mv=-1; if(isDown('R'))mv=1;
+        if(mv&&!P.frozen){ P.face=mv; P.x+=mv*76*dt; P.wt+=dt; P.state='walk'; } else P.state='idle';
+        if(!P.frozen){
+          if(press('A')){ P.state='attack'; P.atk=0; P.hitDone=false; sfx('step'); }
+          else if(press('B')){ P.state='roll'; P.roll=0.4; }
+        }
+      }
+      P.x=Math.max(WALL_L+8,Math.min(WALL_R-8,P.x));
+      if(rack && Math.abs(P.x-58)<24 && press('U')){
+        P.weapon = P.weapon==='fists'?'hammer':(P.weapon==='hammer'?'sword':'fists');
+        sfx('pick');
+        flash(P.weapon==='hammer'?'ГИГАНТСКИЙ МОЛОТ':(P.weapon==='sword'?'САМУРАЙСКИЙ МЕЧ':'КУЛАКИ'));
+      }
+      E.update(dt,P);
+      if(E.danger&&overlap(E.danger,playerBox())) hurt();
+    },
+    draw:function(){
+      ctx.save(); shake(sh);
+      var g=ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,'#2A1F18'); g.addColorStop(1,'#4A3626');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      for(var bx=0;bx<W;bx+=40) R(bx,96,38,120,'#3A2C20');
+      R(0,96,W,3,'#54402E');
+      // толпа
+      R(0,52,W,46,'#1E1712');
+      for(var i=0;i<22;i++){
+        var cx=8+i*22, cy=84-((i*7)%10), clapping=clap>0;
+        var hp=['#8A6B4A','#6B4A2C','#C9A57F','#4A3A2A','#A9713F'][i%5];
+        C(cx,cy-8,5,hp); R(cx-5,cy-3,10,10,['#5A4A6A','#3E4A6B','#6B3A3A','#3A5A4A'][i%4]);
+        if(clapping){ var a=Math.sin(t*18+i)*3; R(cx-8,cy-2+a,3,3,hp); R(cx+5,cy-2-a,3,3,hp); }
+      }
+      R(0,90,W,6,'#5A4632'); R(0,90,W,2,'#6E5740');
+      // Рома в толпе
+      kid(392,96,{pal:ROM,pose:'idle',face:-1,t:t});
+      // факелы
+      for(var f2=0;f2<3;f2++){ var fx=60+f2*180;
+        R(fx,110,4,16,'#2A2018'); C(fx+2,108,5+Math.sin(t*9+f2)*1.5,'#F4A63C'); C(fx+2,107,3,'#F6E3A8'); }
+      // пол
+      R(0,GROUND,W,H-GROUND,'#C9A567'); R(0,GROUND,W,3,'#DDBB7D');
+      for(var s2=0;s2<40;s2++) R((s2*37)%W,GROUND+8+((s2*13)%40),3,2,'#B8935A');
+      R(0,GROUND,WALL_L,H-GROUND,'#3A2C20'); R(WALL_R,GROUND,W-WALL_R,H-GROUND,'#3A2C20');
+      if(hole){ EL(holeX,GROUND+10,30,10,'#1A120C'); EL(holeX,GROUND+8,28,8,'#0E0906'); }
+      // стойка с оружием
+      if(rack){
+        R(44,GROUND-40,30,4,'#6B4526'); R(46,GROUND-36,3,36,'#6B4526'); R(69,GROUND-36,3,36,'#6B4526');
+        R(50,GROUND-58,3,20,'#8A5C33'); R(46,GROUND-62,12,6,'#6D7076');
+        R(60,GROUND-58,2,20,'#D9DEE6'); R(58,GROUND-40,7,3,'#C8A24A');
+        R(66,GROUND-56,2,18,'#B9C0C9'); R(41,GROUND-52,3,14,'#D9DEE6');
+        if(Math.abs(P.x-58)<24&&mode==='fight'&&Math.floor(t*2)%2===0)
+          T('[↑] сменить оружие',58,GROUND-70,{size:9,color:'#F4A63C',align:'center'});
+      }
+      var pose=P.state==='attack'?'attack':(P.state==='roll'?'roll':(P.frozen?'scared':(P.state==='walk'?'walk':'idle')));
+      var blink=P.inv>0&&Math.floor(t*20)%2===0;
+      if(!blink) kid(P.x,GROUND,{pal:GOR,hairStyle:'curls',big:1,face:P.face,pose:pose,
+        t:pose==='roll'?(0.4-P.roll):P.wt,atk:P.atk,weapon:P.weapon==='fists'?null:P.weapon});
+      if(E&&(mode!=='win'||win<0.6)) E.draw(t);
+      else if(E&&mode==='win'){
+        ctx.save(); ctx.translate(E.x,GROUND); ctx.rotate(Math.min(1.5708,(win-0.6)*3));
+        ctx.translate(-E.x,-GROUND); E.draw(t); ctx.restore();
+      }
+      ctx.restore();
+      /* HUD */
+      for(var h2=0;h2<P.max;h2++){
+        var hx=12+h2*13, on=h2<P.hp;
+        R(hx+1,10,7,7,on?'#C24A2C':'rgba(0,0,0,.35)');
+        R(hx,11,9,5,on?'#C24A2C':'rgba(0,0,0,.35)');
+        if(on) R(hx+2,11,2,2,'#E8836A');
+      }
+      if(E&&E.hp>0){
+        var bw=150, bx2=W/2-bw/2;
+        T(E.name,W/2,14,{size:9,color:'#E9C87C',align:'center',weight:'500'});
+        R(bx2,18,bw,6,'rgba(0,0,0,.45)');
+        R(bx2,18,bw*Math.max(0,E.hp/E.max),6,'#C24A2C');
+        R(bx2,18,bw,1,'rgba(233,200,124,.5)');
+      }
+      var wn=P.weapon==='hammer'?'молот':(P.weapon==='sword'?'меч':'кулаки');
+      T('оружие: '+wn,W-12,16,{size:9,color:'#A08D7B',align:'right'});
+      if(msgT>0){ ctx.globalAlpha=Math.min(1,msgT*2);
+        T(msg,W/2,60,{size:13,font:FD,color:'#F4A63C',align:'center'}); ctx.globalAlpha=1; }
+      if(mode==='dead'){
+        ctx.fillStyle='rgba(10,7,6,.72)'; ctx.fillRect(0,0,W,H);
+        T('ГОРЕЛАН УПАЛ',W/2,124,{size:24,font:FD,color:'#C24A2C',align:'center'});
+        T('[Z] выйти на арену ещё раз',W/2,150,{size:12,color:'#F6ECD8',align:'center'});
+      }
+      if(mode==='dialog'||(mode==='scared'&&d&&!d.done)) d.draw();
+    }};
+};
+
+/* ---------- глава 4: щель под дверью ---------- */
+S.escape=function(){
+  var WW=1500, x=60, face=1, wt=0, t=0, cam=0, d=null, mode='play', goal='exit', caught=0;
+  var crates=[220,300,470,640,760,980,1120,1290];
+  var guards=[{x:300,a:250,b:560,dir:1},{x:1020,a:940,b:1250,dir:-1}];
+  var GORX=880, gorFace=1;
+  function say(lines,after){ d=Dialog(lines,after); mode='talk'; }
+  say([['narr','Коридор. Где-то наверху всё ещё хлопают.'],
+       ['roma','Надо искать выход. Мимо этих в чёрном — тихо: [↓] присесть за ящиком.']],function(){mode='play'});
+  function crouching(){ return isDown('D'); }
+  function hidden(){
+    if(!crouching()) return false;
+    for(var i=0;i<crates.length;i++) if(Math.abs(crates[i]+10-x)<16) return true;
+    return false;
+  }
+  return {
+    update:function(dt){
+      t+=dt; if(caught>0) caught-=dt;
+      if(mode==='talk'){ d.update(dt); return; }
+      if(mode==='done'){ x+=140*dt; if(x>WW-40) nextChapter(); return; }
+      var mv=0; if(isDown('L'))mv=-1; if(isDown('R'))mv=1;
+      var sp=crouching()?44:96;
+      if(mv){ face=mv; x+=mv*sp*dt; wt+=dt; }
+      x=Math.max(24,Math.min(WW-30,x));
+      for(var i=0;i<guards.length;i++){
+        var g=guards[i]; g.x+=g.dir*42*dt;
+        if(g.x<g.a){g.x=g.a;g.dir=1;} if(g.x>g.b){g.x=g.b;g.dir=-1;}
+        var dx=(x-g.x)*g.dir;
+        if(caught<=0 && dx>0 && dx<96 && !hidden()){
+          caught=2.2; sfx('alarm'); x=Math.max(24,goal==='exit'?60:GORX-60); }
+      }
+      if(goal==='exit' && x>WW-90 && press('U')){
+        sfx('pick'); goal='gorelan';
+        say([['narr','Железная дверь. Внизу — небольшая щель между дверью и полом.'],
+             ['roma','А там пустыня! Это выход. Надо найти Горелана — он остался у деревянной двери.']],function(){mode='play'});
+      }
+      if(goal==='gorelan' && Math.abs(x-GORX)<26 && press('U')){
+        sfx('pick'); goal='run';
+        say([['gorelan','Я думаю, выход там.'],
+             ['roma','Я уже нашёл выход! Там маленькая щель, но через неё можно как-то пролезть.'],
+             ['gorelan','Маленькая?! Она же гигантская!'],
+             ['narr','И с лёгкостью полез.'],
+             ['gorelan','Я в микроволновке!'],
+             ['roma','Какая микроволновка? Это же пустыня.'],
+             ['gorelan','Но тут так жарко, как будто в микроволновке.'],
+             ['roma','Может, в печке?'],
+             ['gorelan','Ну да, в печке. Залезай сюда быстрее, иначе нас поймают!'],
+             ['roma','Да лезу я, лезу.']],function(){ mode='done'; });
+      }
+    },
+    draw:function(){
+      cam=Math.max(0,Math.min(WW-W,x-W/2));
+      R(0,0,W,H,'#181310');
+      ctx.save(); ctx.translate(-cam,0);
+      for(var bx=0;bx<WW;bx+=32) for(var by=48;by<216;by+=18)
+        R(bx+((by/18)%2?0:16),by,30,16,((bx+by)%64===0)?'#332920':'#2B221A');
+      R(0,214,WW,56,'#1A150E'); R(0,214,WW,2,'#3A2E22');
+      for(var f=0;f<WW;f+=170){
+        var gx=f+42, gg=ctx.createRadialGradient(gx,118,4,gx,118,92);
+        gg.addColorStop(0,'rgba(244,166,60,.30)'); gg.addColorStop(1,'rgba(244,166,60,0)');
+        ctx.fillStyle=gg; ctx.fillRect(gx-92,26,184,184);
+        R(f+40,120,4,14,'#2A2018'); C(gx,118,5+Math.sin(t*8+f)*1.2,'#F4A63C'); C(gx,117,3,'#F6E3A8'); }
+      for(var i=0;i<crates.length;i++){
+        var cx=crates[i]; R(cx,GROUND-22,22,22,'#6B4526'); R(cx,GROUND-22,22,3,'#8A5C33');
+        R(cx+2,GROUND-13,18,3,'#503219');
+      }
+      // деревянная дверь
+      R(GORX-14,GROUND-46,32,46,'#6B4526'); R(GORX-14,GROUND-46,32,3,'#8A5C33');
+      R(GORX+10,GROUND-26,4,4,'#C8A24A');
+      // железная дверь
+      R(WW-70,GROUND-58,44,58,'#5A5F66'); R(WW-70,GROUND-58,44,4,'#787E86');
+      R(WW-70,GROUND-6,44,5,'#111'); R(WW-66,GROUND-5,36,4,'#E9C87C');
+      for(var r2=0;r2<3;r2++) R(WW-66,GROUND-50+r2*16,36,3,'#4A4E55');
+      // охрана
+      for(var gi=0;gi<guards.length;gi++){
+        var g=guards[gi];
+        ctx.fillStyle='rgba(244,166,60,.17)';
+        ctx.beginPath(); ctx.moveTo(g.x,GROUND-38);
+        ctx.lineTo(g.x+g.dir*96,GROUND-52); ctx.lineTo(g.x+g.dir*96,GROUND); ctx.lineTo(g.x,GROUND); ctx.closePath(); ctx.fill();
+        adult(g.x,GROUND,{pal:GRD,kind:'guard',face:g.dir,walk:true,t:t});
+        T('!',g.x,GROUND-58,{size:11,font:FD,color:'rgba(194,74,44,.9)',align:'center'});
+      }
+      if(mode!=='done'||x<GORX+40)
+        kid(GORX,GROUND,{pal:GOR,hairStyle:'curls',big:1,face:mode==='done'?1:-1,
+          pose:mode==='done'?'walk':'idle',t:t});
+      var pose=mode==='done'?'walk':(isDown('L')||isDown('R')?'walk':'idle');
+      ctx.save(); if(crouching()&&mode==='play') ctx.translate(0,6);
+      kid(x,GROUND,{pal:ROM,face:face,pose:pose,t:wt});
+      ctx.restore();
+      ctx.restore();
+      var v=ctx.createRadialGradient(x-cam,150,60,x-cam,150,260);
+      v.addColorStop(0,'rgba(8,5,4,0)'); v.addColorStop(1,'rgba(8,5,4,.5)');
+      ctx.fillStyle=v; ctx.fillRect(0,0,W,H);
+      R(10,8,goal==='exit'?168:186,16,'rgba(20,15,12,.85)');
+      T(goal==='exit'?'Цель: найти выход →':'Цель: вернуться к Горелану ←',16,20,{size:10,color:'#E9C87C'});
+      if(goal==='exit'&&x>WW-90&&Math.floor(t*2)%2===0) T('[↑] посмотреть в щель',x-cam,GROUND-70,{size:9,color:'#F4A63C',align:'center'});
+      if(goal==='gorelan'&&Math.abs(x-GORX)<26&&Math.floor(t*2)%2===0) T('[↑] позвать Горелана',x-cam,GROUND-70,{size:9,color:'#F4A63C',align:'center'});
+      if(caught>0){ ctx.globalAlpha=Math.min(1,caught);
+        T('ЗАМЕТИЛИ!',W/2,70,{size:20,font:FD,color:'#C24A2C',align:'center'}); ctx.globalAlpha=1; }
+      if(mode==='talk') d.draw();
+    }};
+};
+
+/* ---------- глава 5: как в печке ---------- */
+function desertSky(t){
+  var g=ctx.createLinearGradient(0,0,0,GROUND);
+  g.addColorStop(0,'#6FA8C4'); g.addColorStop(0.6,'#D9B77E'); g.addColorStop(1,'#E8C88A');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,GROUND);
+  C(392,44,18,'rgba(255,246,214,.35)'); C(392,44,12,'#FFF6D6');
+}
+function dunes(cam){
+  ctx.fillStyle='#D2A96E'; ctx.beginPath(); ctx.moveTo(0,GROUND);
+  for(var i=0;i<=W;i+=8){ var wx=i+cam*0.25; ctx.lineTo(i,150+Math.sin(wx*0.012)*14+Math.sin(wx*0.03)*6); }
+  ctx.lineTo(W,GROUND); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#C79B5E'; ctx.beginPath(); ctx.moveTo(0,GROUND);
+  for(var j=0;j<=W;j+=8){ var wx2=j+cam*0.5; ctx.lineTo(j,178+Math.sin(wx2*0.02+2)*12); }
+  ctx.lineTo(W,GROUND); ctx.closePath(); ctx.fill();
+}
+S.desert=function(){
+  var WW=2700, x=40, t=0, wt=0, heat=0, jump=0, vy=0, d=null, mode='talk', said=false, dead=0;
+  var rocks=[{x:420,w:90},{x:900,w:80},{x:1500,w:110},{x:2050,w:90}];
+  var bugs=[{x:600},{x:1080},{x:1320},{x:1750},{x:1980},{x:2320}];
+  var safe=40;
+  d=Dialog([['narr','Мы вылезли и увидели рядом дорогу. Пошли по ней.'],
+            ['roma','Да тут реально как в печке... Держись тени от скал: → идти, Z — перепрыгнуть.']],function(){mode='play'});
+  function inShade(){
+    for(var i=0;i<rocks.length;i++) if(x>rocks[i].x&&x<rocks[i].x+rocks[i].w) return true;
+    return false;
+  }
+  return {
+    update:function(dt){
+      t+=dt;
+      if(mode==='talk'){ d.update(dt); return; }
+      if(mode==='dead'){ if(press('A')){ x=safe; heat=45; mode='play'; } return; }
+      var mv=0; if(isDown('L'))mv=-0.5; if(isDown('R'))mv=1;
+      if(mv){ x+=mv*74*dt; wt+=dt; }
+      x=Math.max(20,Math.min(WW,x));
+      if(jump>0){ jump-=dt; vy=-Math.sin((0.55-jump)/0.55*3.1416)*26; } else vy=0;
+      if(press('A')&&jump<=0){ jump=0.55; sfx('step'); }
+      var sh2=inShade();
+      if(sh2){ heat=Math.max(0,heat-15*dt); safe=x; } else heat+=6.2*dt;
+      for(var i=0;i<bugs.length;i++){
+        if(Math.abs(bugs[i].x-x)<12 && vy>-8){ if(bugs[i].hit!==true){ bugs[i].hit=true; heat=Math.min(100,heat+16); sfx('hurt'); } }
+        else if(Math.abs(bugs[i].x-x)>30) bugs[i].hit=false;
+      }
+      if(!said&&x>1200){ said=true; mode='talk';
+        d=Dialog([['gorelan','Через пару часов нам очень сильно захотелось воды.'],
+                  ['roma','Смотри — там люди и машины. Маленькая деревня!']],function(){mode='play'}); }
+      if(heat>=100){ heat=100; mode='dead'; sfx('lose'); }
+      if(x>=WW-10){ sfx('win'); nextChapter(); }
+    },
+    draw:function(){
+      var cam=Math.max(0,Math.min(WW-W+120,x-W/2));
+      desertSky(t); dunes(cam);
+      R(0,GROUND,W,H-GROUND,'#E0B87A'); R(0,GROUND,W,3,'#EFCD95');
+      ctx.save(); ctx.translate(-cam,0);
+      R(0,GROUND-4,WW+200,22,'#C6A170'); R(0,GROUND-4,WW+200,2,'#D6B484');
+      for(var tr=0;tr<WW;tr+=26) R(tr,GROUND+9,14,2,'#B08C5C');
+      for(var i=0;i<rocks.length;i++){
+        var r2=rocks[i];
+        R(r2.x+2,GROUND-54,r2.w-4,54,'#9C7A50'); R(r2.x+2,GROUND-54,r2.w-4,5,'#B08C5C');
+        R(r2.x+14,GROUND-72,r2.w-30,20,'#8A6A45'); R(r2.x+14,GROUND-72,r2.w-30,4,'#A2825A');
+        R(r2.x+28,GROUND-84,r2.w-58,14,'#7A5C3C');
+      }
+      for(var b=0;b<bugs.length;b++){
+        var bx2=bugs[b].x, sw2=Math.sin(t*6+b)*3;
+        R(bx2-6,GROUND-6,12,5,'#7A3B22'); R(bx2+5,GROUND-9,4,4,'#5E2C18');
+        R(bx2-9,GROUND-9+sw2*0.3,4,3,'#5E2C18'); R(bx2-7,GROUND-4,2,4,'#4E2414'); R(bx2+2,GROUND-4,2,4,'#4E2414');
+      }
+      // деревня вдали
+      for(var v2=0;v2<6;v2++){ var vx=WW-40+v2*0; }
+      R(WW-120,GROUND-46,54,46,'#C4A377'); R(WW-120,GROUND-46,54,5,'#D8B98C');
+      R(WW-56,GROUND-34,40,34,'#B8946A'); R(WW-56,GROUND-34,40,5,'#CBA97D');
+      R(WW-104,GROUND-26,12,26,'#6B4526');
+      kid(x-23,GROUND+vy*0.6,{pal:GOR,hairStyle:'curls',big:1,face:1,pose:(isDown('R')||isDown('L'))?'walk':'idle',t:wt-0.2});
+      kid(x,GROUND+vy,{pal:ROM,face:1,pose:jump>0?'idle':((isDown('R')||isDown('L'))?'walk':'idle'),t:wt});
+      for(var sd=0;sd<rocks.length;sd++){
+        var r3=rocks[sd];
+        ctx.fillStyle='rgba(42,64,96,.22)'; ctx.fillRect(r3.x,GROUND-84,r3.w,98);
+        T('ТЕНЬ',r3.x+r3.w/2,GROUND-92,{size:9,color:'#8FB9C4',align:'center'});
+      }
+      ctx.restore();
+      // жара
+      ctx.globalAlpha=Math.min(0.45,heat/230); ctx.fillStyle='#E8642C'; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1;
+      R(12,10,124,16,'rgba(20,15,12,.7)');
+      T('ЖАРА',18,22,{size:9,color:'#E9C87C'});
+      R(52,14,78,8,'rgba(0,0,0,.4)');
+      R(52,14,78*(heat/100),8,heat>70?'#C24A2C':'#F4A63C');
+      var prog=Math.min(1,x/WW);
+      R(W-124,10,112,16,'rgba(20,15,12,.7)');
+      T('до деревни',W-118,22,{size:9,color:'#A08D7B'});
+      R(W-58,14,44,8,'rgba(0,0,0,.4)'); R(W-58,14,44*prog,8,'#43A894');
+      if(inShade()&&Math.floor(t*2)%2===0) T('в тени прохладнее',W/2,60,{size:10,color:'#43A894',align:'center'});
+      if(mode==='dead'){
+        ctx.fillStyle='rgba(232,100,44,.5)'; ctx.fillRect(0,0,W,H);
+        T('СЛИШКОМ ЖАРКО',W/2,120,{size:22,font:FD,color:'#F6ECD8',align:'center'});
+        T('[Z] вернуться в тень',W/2,146,{size:11,color:'#F6ECD8',align:'center'});
+      }
+      if(mode==='talk') d.draw();
+    }};
+};
+
+/* ---------- глава 6: источник ---------- */
+function carSide(x,y,o){
+  o=o||{}; var b=o.color||'#8AA36B', d2=o.dark||'#6C8250';
+  R(x-27,y-16,54,12,b); R(x-27,y-16,54,3,d2);
+  R(x-16,y-27,30,11,b); R(x-13,y-25,12,8,'#BCD6E0'); R(x+1,y-25,11,8,'#BCD6E0');
+  R(x-27,y-6,54,3,'#3A3A3A');
+  C(x-15,y-3,6,'#2A2A2E'); C(x-15,y-3,2,'#7A7A80');
+  C(x+15,y-3,6,'#2A2A2E'); C(x+15,y-3,2,'#7A7A80');
+  R(x+25,y-14,4,4,'#E9C87C'); R(x-29,y-14,3,4,'#C24A2C');
+  if(o.rust){ R(x-20,y-12,7,4,'#8A5C33'); R(x+6,y-9,9,3,'#8A5C33'); R(x-4,y-26,6,3,'#8A5C33'); }
+}
+S.village=function(){
+  var t=0, d=null, mode='talk', drink=0, paid=false, x=120, wt=0;
+  function say(lines,after){ d=Dialog(lines,after); mode='talk'; }
+  say([['narr','Это была маленькая деревня. Люди, машины, пыль.'],
+       ['both','Привет!'],
+       ['villager','Конеоа еаещо хзщо... эээ, я рсси не ониат, не поймать.'],
+       ['gorelan','Подожди. Я знаю этот язык, это мой родной.'],
+       ['gorelan','Ооенгшщ пр... хкуцущ жувр!'],
+       ['roma','Что ты ему сказал?'],
+       ['gorelan','Что мы очень хотим пить. Спросил, есть ли у них вода.'],
+       ['villager','Хм! Кунжухан мудан даева — целый источник! Идёмте со мной.'],
+       ['narr','И отвёл нас к источнику. Жми Z, пока не напьёшься.']],function(){ mode='drink'; });
+  return {
+    update:function(dt){
+      t+=dt;
+      if(mode==='talk'){ d.update(dt); return; }
+      if(mode==='drink'){
+        drink=Math.max(0,drink-14*dt);
+        if(press('A')){ drink+=8; sfx('drink'); }
+        if(drink>=100){
+          say([['roma','Вода была очень холодная и вкусная.'],
+               ['gorelan','Хох икуе!']],function(){ mode='pay'; }); }
+        return;
+      }
+      if(mode==='pay'){
+        if(press('A')){ paid=true; sfx('win'); mode='talk';
+          say([['narr','Горелан дал этому дядьке 100 долларов. Дяденька очень сильно обрадовался.'],
+               ['narr','Деревня была очень бедная: за целый день работы — пять копеек, может, даже меньше.'],
+               ['gorelan','Кунжухан мудан даева.'],
+               ['roma','А теперь что ты сказал?'],
+               ['gorelan','Чтобы он отвёз нас до нашего города.'],
+               ['narr','Мы сели в старую поломанную машину.'],
+               ['gorelan','Смотри, там машина какая-то. Она очень похожа...'],
+               ['roma','Я её видел там, куда нас привезли. Значит, нас ищут!'],
+               ['gorelan','Надо быстрее отсюда уезжать!']],function(){ nextChapter(); }); }
+        return;
+      }
+    },
+    draw:function(){
+      desertSky(t); dunes(0);
+      ctx.fillStyle='#D2A96E'; ctx.fillRect(0,178,W,GROUND-178);
+      R(0,GROUND,W,H-GROUND,'#E0B87A'); R(0,GROUND,W,3,'#EFCD95');
+      R(16,GROUND-58,74,58,'#C4A377'); R(16,GROUND-58,74,6,'#D8B98C'); R(34,GROUND-30,16,30,'#6B4526');
+      R(96,GROUND-44,58,44,'#B8946A'); R(96,GROUND-44,58,6,'#CBA97D'); R(112,GROUND-22,14,22,'#6B4526');
+      R(300,GROUND-50,62,50,'#C4A377'); R(300,GROUND-50,62,6,'#D8B98C');
+      // источник
+      var sx=418;
+      R(sx-26,GROUND-8,52,10,'#8A9A7A'); EL(sx,GROUND-6,24,7,'#3E8FA8'); EL(sx,GROUND-7,20,5,'#5FB6CC');
+      R(sx-6,GROUND-44,12,36,'#9C7A50'); R(sx-10,GROUND-48,20,6,'#8A6A45');
+      for(var w2=0;w2<5;w2++){ var wy=GROUND-40+((t*40+w2*9)%32);
+        R(sx-1,wy,2,4,'rgba(120,200,220,.8)'); }
+      carSide(210,GROUND,{color:'#8AA36B',dark:'#6C8250',rust:true});
+      adult(360,GROUND,{pal:VIL,kind:'villager',face:-1,t:t,smile:paid});
+      kid(x,GROUND,{pal:GOR,hairStyle:'curls',big:1,face:1,pose:'idle',t:t});
+      kid(x+26,GROUND,{pal:ROM,face:1,pose:'idle',t:t});
+      if(paid){ T('$100',350,GROUND-64,{size:12,font:FD,color:'#43A894',align:'center'});
+        T('!!!',372,GROUND-76,{size:12,font:FD,color:'#F4A63C',align:'center'}); }
+      if(mode==='drink'){
+        R(W/2-80,150,160,34,'rgba(20,15,12,.86)'); R(W/2-80,150,160,1,'#43A894');
+        T('ПЕЙ! [Z]',W/2,166,{size:12,font:FD,color:'#F6ECD8',align:'center'});
+        R(W/2-68,170,136,8,'rgba(0,0,0,.45)');
+        R(W/2-68,170,136*Math.min(1,drink/100),8,'#43A894');
+      }
+      if(mode==='pay'){
+        R(W/2-92,150,184,34,'rgba(20,15,12,.9)'); R(W/2-92,150,184,1,'#E9C87C');
+        T('[Z] дать дядьке 100 долларов',W/2,171,{size:11,color:'#F6ECD8',align:'center'});
+      }
+      if(mode==='talk') d.draw();
+    }};
+};
+
+/* ---------- глава 7: погоня ---------- */
+function carTop(x,y,c,cd,glass){
+  R(x-11,y-20,22,40,c); R(x-11,y-20,22,4,cd);
+  R(x-9,y-15,18,9,glass||'#BCD6E0'); R(x-9,y+4,18,9,glass||'#BCD6E0');
+  R(x-8,y-5,16,8,cd);
+  R(x-13,y-14,3,8,'#2A2A2E'); R(x+10,y-14,3,8,'#2A2A2E');
+  R(x-13,y+6,3,8,'#2A2A2E'); R(x+10,y+6,3,8,'#2A2A2E');
+  R(x-7,y-21,4,2,'#F6E3A8'); R(x+3,y-21,4,2,'#F6E3A8');
+}
+S.chase=function(){
+  var lanes=[170,240,310], lane=1, px=lanes[1], t=0, dist=0.4, turns=0, need=3;
+  var obs=[], spawn=0.8, sign=null, signT=0, mode='talk', d=null, scroll=0, sh=0, msg='', msgT=0, wipe=0;
+  function say(l,a){ d=Dialog(l,a); mode='talk'; }
+  function flash(s){ msg=s; msgT=1.4; }
+  say([['narr','Мы поехали на этой развалюхе по дороге далеко-далеко.'],
+       ['gorelan','И вдруг видим — за нами едет та машина!'],
+       ['gorelan','Хоё фэтц зхжгс! Оого омомо!'],
+       ['narr','Когда появится знак поворота — жми ← или → вовремя. ← → между полосами.']],function(){mode='drive'});
+  return {
+    update:function(dt){
+      t+=dt; if(sh>0)sh=Math.max(0,sh-dt*10); if(msgT>0)msgT-=dt; if(wipe>0)wipe-=dt;
+      if(mode==='talk'){ d.update(dt); return; }
+      if(mode==='dead'){ if(press('A')){ dist=0.45; obs=[]; sign=null; mode='drive'; } return; }
+      if(mode==='win'){ return; }
+      scroll+=210*dt;
+      dist+=0.048*dt;
+      // знак поворота
+      if(signT>0){
+        signT-=dt;
+        var okL=sign==='L'&&press('L'), okR=sign==='R'&&press('R');
+        if(okL||okR){
+          turns++; dist=Math.max(0,dist-0.32); sign=null; signT=0; wipe=0.55; sfx('win'); obs=[];
+          flash('ЗАВЕРНУЛИ!');
+          if(turns>=need){ mode='win';
+            say([['narr','Резко завернули. Через некоторое время завернули за угол. Потом снова завернули.'],
+                 ['roma','И мы были на нашей улице. Алексеевка!']],function(){ nextChapter(); }); }
+        } else if(signT<=0){ sign=null; dist+=0.13; flash('НЕ УСПЕЛИ!'); sfx('hurt'); }
+      } else {
+        if(Math.random()<dt*0.30){ sign=Math.random()<0.5?'L':'R'; signT=1.7; sfx('alarm'); }
+        if(press('L')&&lane>0){ lane--; sfx('step'); }
+        if(press('R')&&lane<2){ lane++; sfx('step'); }
+      }
+      px+=(lanes[lane]-px)*Math.min(1,dt*10);
+      spawn-=dt;
+      if(spawn<=0){ spawn=0.75+Math.random()*0.7;
+        obs.push({l:Math.floor(Math.random()*3),y:-30,k:Math.random()<0.4?'goat':(Math.random()<0.5?'rock':'hole')}); }
+      for(var i=obs.length-1;i>=0;i--){
+        var o=obs[i]; o.y+=210*dt;
+        if(!o.hit&&Math.abs(o.y-200)<16&&Math.abs(lanes[o.l]-px)<20){
+          o.hit=true; dist+=0.13; sh=5; sfx('heavy'); flash('БАМ!'); }
+        if(o.y>300) obs.splice(i,1);
+      }
+      if(dist>=1){ dist=1; mode='dead'; sfx('lose'); }
+    },
+    draw:function(){
+      ctx.save(); shake(sh);
+      R(0,0,W,H,'#D8B27A');
+      for(var sp2=0;sp2<26;sp2++){ var sy=((scroll*1.4+sp2*57)%320)-30;
+        R(30+((sp2*53)%100),sy,2,10,'rgba(180,145,95,.5)'); R(360+((sp2*37)%96),sy+18,2,10,'rgba(180,145,95,.5)'); }
+      R(136,0,208,H,'#9A8B79'); R(136,0,4,H,'#EFE4CE'); R(340,0,4,H,'#EFE4CE');
+      R(140,0,4,H,'rgba(0,0,0,.12)'); R(336,0,4,H,'rgba(0,0,0,.12)');
+      for(var y2=-44;y2<H;y2+=44){ var yy=y2+(scroll%44); R(203,yy,3,22,'#EFE4CE'); R(274,yy,3,22,'#EFE4CE'); }
+      for(var c2=0;c2<5;c2++){ var cy=((scroll*0.6+c2*90)%340)-40;
+        R(96,cy,5,16,'#4A7A48'); R(88,cy+4,8,4,'#4A7A48'); R(101,cy+2,8,4,'#4A7A48');
+        R(384,cy+40,5,16,'#4A7A48'); R(376,cy+44,8,4,'#4A7A48'); R(389,cy+42,8,4,'#4A7A48'); }
+      for(var i=0;i<obs.length;i++){
+        var o=obs[i], ox=lanes[o.l], oy=o.y;
+        if(o.k==='rock'){ EL(ox,oy,11,8,'#8A7A64'); EL(ox-3,oy-2,6,4,'#A2917A'); }
+        else if(o.k==='hole'){ EL(ox,oy,13,7,'#4A4038'); EL(ox,oy-1,10,5,'#2A241E'); }
+        else { R(ox-9,oy-6,18,11,'#E3D6BC'); R(ox+7,oy-9,7,7,'#E3D6BC'); R(ox+12,oy-9,3,3,'#3A3028');
+          R(ox-8,oy+5,3,5,'#C9B99C'); R(ox+4,oy+5,3,5,'#C9B99C'); }
+      }
+      var py=344-136*dist;
+      if(py<292) carTop(px,py,'#26262C','#151519','#3A4650');
+      carTop(px,200,'#8AA36B','#6C8250');
+      ctx.restore();
+      // погоня
+      R(12,10,140,16,'rgba(20,15,12,.75)');
+      T('ОНИ СЗАДИ',18,22,{size:9,color:'#E9C87C'});
+      R(78,14,68,8,'rgba(0,0,0,.45)'); R(78,14,68*dist,8,dist>0.7?'#C24A2C':'#F4A63C');
+      T('повороты: '+turns+'/'+need,W-12,22,{size:10,color:'#F6ECD8',align:'right',weight:'500'});
+      if(sign){
+        var a=Math.floor(t*8)%2===0?'#F4A63C':'#F6ECD8';
+        R(W/2-52,52,104,34,'rgba(20,15,12,.9)'); R(W/2-52,52,104,1,a);
+        T(sign==='L'?'◀ ПОВОРОТ':'ПОВОРОТ ▶',W/2,74,{size:15,font:FD,color:a,align:'center'});
+        R(W/2-46,80,92*Math.max(0,signT/1.7),3,'#C24A2C');
+      }
+      if(msgT>0){ ctx.globalAlpha=Math.min(1,msgT*2);
+        T(msg,W/2,120,{size:18,font:FD,color:'#F6ECD8',align:'center'}); ctx.globalAlpha=1; }
+      if(wipe>0){ ctx.fillStyle='rgba(246,236,216,'+Math.min(0.8,wipe)+')'; ctx.fillRect(0,0,W,H); }
+      if(mode==='dead'){
+        ctx.fillStyle='rgba(10,7,6,.72)'; ctx.fillRect(0,0,W,H);
+        T('ОНИ ПОЧТИ ДОГНАЛИ',W/2,124,{size:20,font:FD,color:'#C24A2C',align:'center'});
+        T('[Z] жать на газ ещё раз',W/2,150,{size:12,color:'#F6ECD8',align:'center'});
+      }
+      if(mode==='talk'||mode==='win') d.draw();
+    }};
+};
+
+/* ---------- финал ---------- */
+S.ending=function(){
+  var t=0, carX=560, out=false, d=null, mode='drive';
+  return {
+    update:function(dt){
+      t+=dt;
+      if(mode==='drive'){ carX-=110*dt; if(carX<=300){ carX=300; mode='talk'; out=true;
+        d=Dialog([['narr','И мы были на нашей улице. Алексеевка.'],
+                  ['gorelan','Спасибо, дядя. Кунжухан!'],
+                  ['roma','Пока! Завтра на скамейке?'],
+                  ['gorelan','На скамейке. Только конфеты больше не берём.']],function(){ mode='end'; t=0; }); } return; }
+      if(mode==='talk'){ d.update(dt); return; }
+      if(mode==='end'&&t>1.2&&press('A')){ goFade('title',{}); }
+    },
+    draw:function(){
+      var g=ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,'#7FB2C9'); g.addColorStop(0.7,'#CFD8DA'); g.addColorStop(1,'#E7D3AE');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      C(70,40,16,'rgba(255,250,220,.5)'); C(70,40,11,'#FFF8DC');
+      var hs=[[0,150,60,80],[54,132,44,98],[96,158,70,72],[164,140,50,90],[212,164,64,66],[274,146,58,84],
+              [330,160,52,70],[380,138,46,92],[424,156,60,74]];
+      for(var i=0;i<hs.length;i++){ var h=hs[i];
+        R(h[0],h[1],h[2],h[3],i%2?'#B8A48C':'#C9B49A'); R(h[0],h[1],h[2],5,'#8A7A64');
+        for(var wx=h[0]+6;wx<h[0]+h[2]-6;wx+=14) for(var wy=h[1]+12;wy<h[1]+h[3]-16;wy+=18)
+          R(wx,wy,7,9,'#5E6E78'); }
+      R(0,214,W,56,'#9A8B79'); R(0,214,W,2,'#B0A08C');
+      for(var d2=8;d2<W;d2+=32) R(d2,240,18,2,'#8A7A68');
+      R(40,150,4,66,'#5A4A42'); R(28,142,28,4,'#5A4A42');
+      bench(150,214);
+      carSide(carX,GROUND,{color:'#8AA36B',dark:'#6C8250',rust:true});
+      if(out){
+        kid(214,GROUND,{pal:GOR,hairStyle:'curls',big:1,face:-1,pose:'idle',t:t});
+        kid(240,GROUND,{pal:ROM,face:-1,pose:'idle',t:t});
+      }
+      if(mode==='end'){
+        ctx.fillStyle='rgba(18,14,12,'+Math.min(0.72,t*0.5)+')'; ctx.fillRect(0,0,W,H);
+        var a=Math.min(1,t*0.9); ctx.globalAlpha=a;
+        T('КОНЕЦ',W/2,116,{size:40,font:FD,color:'#E9C87C',align:'center',shadowColor:'#C24A2C'});
+        T('Будут ли следующие приключения Горелана и Ромы — неизвестно.',W/2,146,
+          {size:16,font:FH,color:'#F6ECD8',align:'center'});
+        if(t>1.2&&Math.floor(t*1.6)%2===0)
+          T('[Z] на титульный экран',W/2,182,{size:11,color:'#F4A63C',align:'center'});
+        ctx.globalAlpha=1;
+      }
+      if(mode==='talk') d.draw();
+    }};
+};
+
+/* ---------- главный цикл ---------- */
+var last=0;
+function frame(ts){
+  requestAnimationFrame(frame);
+  if(!last) last=ts;
+  var dt=Math.min(0.05,(ts-last)/1000); last=ts; now=ts/1000;
+  fitCanvas();
+  var sc=cv.width/W;
+  ctx.setTransform(sc,0,0,sc,0,0);
+  ctx.clearRect(0,0,W,H);
+  if(press('P')&&curName!=='title'&&curName!=='select'&&curName!=='card'){ hit={}; restartChapter(); }
+  if(cur){ if(fadeDir!==1) cur.update(dt); cur.draw(); }
+  if(fadeDir===1){ fade+=dt*3.4; if(fade>=1){ fade=1; fadeDir=-1; go(fadeTo,fadeArg); } }
+  else if(fadeDir===-1){ fade-=dt*3.4; if(fade<=0){ fade=0; fadeDir=0; } }
+  if(fade>0){ ctx.fillStyle='rgba(10,7,6,'+fade+')'; ctx.fillRect(0,0,W,H); }
+  hit={};
+}
+function boot(){ fitCanvas(); go('title',{}); requestAnimationFrame(frame); }
+if(document.fonts&&document.fonts.ready){
+  var booted=false;
+  document.fonts.ready.then(function(){ if(!booted){booted=true;boot();} });
+  setTimeout(function(){ if(!booted){booted=true;boot();} },1500);
+} else boot();
+</script>
+</body>
+</html>
