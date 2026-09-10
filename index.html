@@ -278,14 +278,14 @@ function noise(dur,vol){
 function sfx(k){
   switch(k){
     case 'talk': tone(420,0.04,'square',0.025); break;
-    case 'hit': noise(0.09,0.09); tone(180,0.09,'square',0.05,90); break;
-    case 'heavy': noise(0.18,0.13); tone(90,0.22,'sawtooth',0.07,45); break;
-    case 'hurt': tone(300,0.22,'sawtooth',0.07,80); break;
+    case 'hit': noise(0.09,0.22); tone(180,0.09,'square',0.13,90); break;
+    case 'heavy': noise(0.18,0.32); tone(90,0.22,'sawtooth',0.18,45); break;
+    case 'hurt': tone(300,0.22,'sawtooth',0.17,80); break;
     case 'pick': tone(660,0.08,'triangle',0.06); tone(990,0.1,'triangle',0.05); break;
     case 'step': tone(120,0.03,'square',0.02); break;
     case 'win': [523,659,784,1046].forEach(function(f,i){setTimeout(function(){tone(f,0.16,'triangle',0.06)},i*100)}); break;
     case 'lose': [392,330,262].forEach(function(f,i){setTimeout(function(){tone(f,0.22,'sawtooth',0.05)},i*130)}); break;
-    case 'boom': noise(0.5,0.16); tone(70,0.5,'sawtooth',0.09,30); break;
+    case 'boom': noise(0.5,0.38); tone(70,0.5,'sawtooth',0.22,30); break;
     case 'drink': tone(500,0.07,'sine',0.05,900); break;
     case 'car': tone(70,0.3,'sawtooth',0.03,60); break;
     case 'alarm': tone(880,0.15,'square',0.05,440); break;
@@ -402,8 +402,26 @@ function jumpNow(o){ o.vy=-170; sfx('jump'); }
 function rollNow(o){ o.roll=0.42; sfx('roll'); }
 
 /* ---------- голоса зверей и людей ---------- */
+/* всё через компрессор: можно делать громко и не получить хрип и щелчки */
+var SFXBUS=null;
+function sfxBus(){
+  if(!AC) return null;
+  if(!SFXBUS){
+    var c=AC.createDynamicsCompressor();
+    try{ c.threshold.value=-5; c.knee.value=9; c.ratio.value=5;
+         c.attack.value=0.004; c.release.value=0.26; }catch(e){}
+    var out=AC.createGain(); out.gain.value=0.82;
+    c.connect(out); out.connect(AC.destination); SFXBUS=c;
+  }
+  return SFXBUS;
+}
+function distCurve(k){
+  var n=1024, c=new Float32Array(n), i, x;
+  for(i=0;i<n;i++){ x=i*2/n-1; c[i]=(1+k)*x/(1+k*Math.abs(x)); }
+  return c;
+}
 function noiseBand(t,dur,vol,freq,q){
-  if(!AC) return;
+  var bus=sfxBus(); if(!bus) return;
   try{
     var n=Math.max(1,Math.floor(AC.sampleRate*dur)), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0);
     for(var i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
@@ -412,60 +430,156 @@ function noiseBand(t,dur,vol,freq,q){
     src.connect(f); f.connect(g); g.connect(AC.destination); src.start(t);
   }catch(e){}
 }
-/* лев: низкий рык с дрожью и придыханием */
-function roar(big){
+/* ЛЕВ. Настоящий рык: резкий вдох-удар, длинное низкое рычание с дрожью
+   и хрипом, и падающий хвост. Смертный рёв — самый долгий и низкий. */
+function roar(kind){
   if(muted||!AC) return;
+  var bus=sfxBus(); if(!bus) return;
+  var die=kind==='die', hurt=kind==='hurt', intro=kind==='intro';
+  var dur = die?1.7 : hurt?0.5 : intro?1.15 : 0.75;
+  var f0  = die?215 : hurt?270 : 200;
+  var f1  = die?34  : hurt?105 : 58;
+  var vol = die?0.54 : hurt?0.34 : intro?0.50 : 0.44;
   try{
-    var t=AC.currentTime, dur=big?0.75:0.34;
-    var o=AC.createOscillator(), o2=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter();
-    o.type='sawtooth'; o.frequency.setValueAtTime(big?125:170,t);
-    o.frequency.exponentialRampToValueAtTime(big?54:85,t+dur);
-    o2.type='square'; o2.frequency.setValueAtTime(big?62:86,t);
-    o2.frequency.exponentialRampToValueAtTime(big?27:44,t+dur);
-    f.type='lowpass'; f.frequency.setValueAtTime(950,t); f.frequency.exponentialRampToValueAtTime(320,t+dur);
-    var lfo=AC.createOscillator(), lg=AC.createGain();
-    lfo.frequency.value=big?24:31; lg.gain.value=0.04; lfo.connect(lg); lg.connect(g.gain);
+    var t=AC.currentTime;
+    var o1=AC.createOscillator(), o2=AC.createOscillator(), sub=AC.createOscillator();
+    var sh=AC.createWaveShaper(), f=AC.createBiquadFilter(), g=AC.createGain();
+    sh.curve=distCurve(die?70:48); sh.oversample='2x';
+    o1.type='sawtooth'; o2.type='sawtooth'; sub.type='square';
+    o1.detune.value=-8; o2.detune.value=9;
+    [o1,o2].forEach(function(o){
+      o.frequency.setValueAtTime(f0*0.75,t);
+      o.frequency.exponentialRampToValueAtTime(f0,t+0.10);      // рёв «раскрывается»
+      o.frequency.setValueAtTime(f0,t+dur*0.42);
+      o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    });
+    sub.frequency.setValueAtTime(f0*0.5,t);
+    sub.frequency.exponentialRampToValueAtTime(f1*0.5,t+dur);
+    f.type='lowpass';
+    f.frequency.setValueAtTime(2600,t);
+    f.frequency.exponentialRampToValueAtTime(360,t+dur);
+    f.Q.value=3;
+    var lfo=AC.createOscillator(), lg=AC.createGain();          // рычащая дрожь
+    lfo.type='sine'; lfo.frequency.setValueAtTime(die?18:28,t);
+    lfo.frequency.linearRampToValueAtTime(die?9:20,t+dur);
+    lg.gain.value=vol*0.34; lfo.connect(lg); lg.connect(g.gain);
     g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(big?0.13:0.09,t+0.08);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.12);
-    o.connect(f); o2.connect(f); f.connect(g); g.connect(AC.destination);
-    o.start(t); o2.start(t); lfo.start(t);
-    o.stop(t+dur+0.2); o2.stop(t+dur+0.2); lfo.stop(t+dur+0.2);
-    noiseBand(t,dur*0.8,0.035,420,1.4);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.07);
+    g.gain.setValueAtTime(vol,t+dur*0.55);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.18);
+    o1.connect(sh); o2.connect(sh); sub.connect(sh); sh.connect(f); f.connect(g); g.connect(bus);
+    o1.start(t); o2.start(t); sub.start(t); lfo.start(t);
+    var stop=t+dur+0.25;
+    o1.stop(stop); o2.stop(stop); sub.stop(stop); lfo.stop(stop);
+    noiseBand(t,0.09,0.30,1500,1.1);                            // удар воздуха в начале
+    noiseBand(t+0.06,dur*0.85,0.16,760,1.0);                    // хрип в глотке
+    if(die) noiseBand(t+dur*0.8,0.5,0.12,300,1.2);              // предсмертный сип
   }catch(e){}
 }
-/* муравей: стридуляция — сухой скрип брюшком, плюс щелчки челюстей */
-function antVoice(n,click){
-  if(muted||!AC) return;
-  var t=AC.currentTime, i;
-  for(i=0;i<(n||5);i++) noiseBand(t+i*0.052,0.045,0.055,2400+(i%2)*1100,7);
-  if(click){ noiseBand(t,0.02,0.09,5200,3); noiseBand(t+0.07,0.02,0.07,4200,3); }
-}
-/* человек: крик с формантами «а» и дрожью в голосе */
-function scream(fall){
-  if(muted||!AC) return;
+/* МУРАВЕЙ. Стридуляция: сухой скрип брюшком плюс жужжащий призвук.
+   Смертный — длинная очередь скрипов, которая замедляется и глохнет. */
+/* один скрип: быстрый «зип» вниз по частоте — так скребок и звучит */
+function antScrape(t,dur,vol,f0,f1){
+  var bus=sfxBus(); if(!bus) return;
   try{
-    var t=AC.currentTime, dur=fall?0.95:0.36;
-    var o=AC.createOscillator(), g=AC.createGain(), f1=AC.createBiquadFilter(), f2=AC.createBiquadFilter();
-    o.type='sawtooth'; o.frequency.setValueAtTime(fall?340:290,t);
-    if(fall) o.frequency.exponentialRampToValueAtTime(105,t+dur);
-    else { o.frequency.exponentialRampToValueAtTime(395,t+0.11);
-           o.frequency.exponentialRampToValueAtTime(250,t+dur); }
-    f1.type='bandpass'; f1.frequency.value=800; f1.Q.value=6;
-    f2.type='bandpass'; f2.frequency.value=1180; f2.Q.value=5;
-    var vib=AC.createOscillator(), vg=AC.createGain();
-    vib.frequency.value=fall?7:12; vg.gain.value=fall?16:10; vib.connect(vg); vg.connect(o.frequency);
+    var o=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter(), sh=AC.createWaveShaper();
+    sh.curve=distCurve(22); o.type='sawtooth';
+    o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    f.type='bandpass'; f.frequency.value=2900; f.Q.value=1.5;
     g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(0.10,t+0.045);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.005);
     g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(f1); o.connect(f2); f1.connect(g); f2.connect(g); g.connect(AC.destination);
-    o.start(t); vib.start(t); o.stop(t+dur+0.06); vib.stop(t+dur+0.06);
+    o.connect(sh); sh.connect(f); f.connect(g); g.connect(AC.destination);
+    o.start(t); o.stop(t+dur+0.03);
+  }catch(e){}
+}
+function antBuzz(t,dur,vol,f0,f1){
+  var bus=sfxBus(); if(!bus) return;
+  try{
+    var o=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter(),
+        lfo=AC.createOscillator(), lg=AC.createGain();
+    o.type='sawtooth'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    f.type='bandpass'; f.frequency.value=2200; f.Q.value=1.3;
+    lfo.type='square'; lfo.frequency.value=62; lg.gain.value=vol*0.5;
+    lfo.connect(lg); lg.connect(g.gain);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(f); f.connect(g); g.connect(bus);
+    o.start(t); lfo.start(t); o.stop(t+dur+0.05); lfo.stop(t+dur+0.05);
+  }catch(e){}
+}
+function antVoice(kind){
+  if(muted||!AC) return;
+  var t=AC.currentTime, i, n, gap;
+  if(kind==='die'){
+    n=18; var at=0;
+    for(i=0;i<n;i++){
+      gap=0.05+i*0.014;                                         // скрипы замедляются и глохнут
+      antScrape(t+at,0.05,0.72-i*0.03,4200-i*140,1100-i*30);
+      noiseBand(t+at,0.06,0.5-i*0.02,2600-i*70,2.2);
+      at+=gap;
+    }
+    antBuzz(t,1.3,0.5,260,55);
+    noiseBand(t+1.3,0.3,0.34,800,1.8);
+    return;
+  }
+  if(kind==='hurt'){
+    for(i=0;i<7;i++){ antScrape(t+i*0.045,0.045,0.8,4600,1400); noiseBand(t+i*0.045,0.05,0.55,3000,2.2); }
+    antBuzz(t,0.36,0.42,340,190);
+    return;
+  }
+  for(i=0;i<6;i++){ antScrape(t+i*0.055,0.05,0.7,3900,1200);        // призыв-угроза
+                    noiseBand(t+i*0.055,0.05,0.45,2500+(i%2)*900,2.2); }
+  antBuzz(t,0.32,0.34,240,210);
+  if(kind==='click'){ noiseBand(t,0.03,0.7,5000,2); noiseBand(t+0.07,0.03,0.6,4200,2); }
+}
+/* ЧЕЛОВЕК. Крик с формантами «а», сорванным придыханием и дрожью.
+   Смертный вопль долгий, срывается и падает вниз. */
+function scream(kind){
+  if(muted||!AC) return;
+  var bus=sfxBus(); if(!bus) return;
+  var die=kind==='die', hurt=kind==='hurt';
+  var dur=die?1.5:hurt?0.4:0.5;
+  var vol=die?0.95:hurt?0.72:0.8;
+  try{
+    var t=AC.currentTime;
+    var o=AC.createOscillator(), sh=AC.createWaveShaper(), g=AC.createGain();
+    var f1=AC.createBiquadFilter(), f2=AC.createBiquadFilter(), f3=AC.createBiquadFilter();
+    sh.curve=distCurve(14); sh.oversample='2x';
+    o.type='sawtooth';
+    if(die){
+      o.frequency.setValueAtTime(400,t);
+      o.frequency.exponentialRampToValueAtTime(470,t+0.12);
+      o.frequency.exponentialRampToValueAtTime(300,t+0.5);      // голос срывается
+      o.frequency.exponentialRampToValueAtTime(360,t+0.62);
+      o.frequency.exponentialRampToValueAtTime(95,t+dur);
+    } else {
+      o.frequency.setValueAtTime(hurt?330:300,t);
+      o.frequency.exponentialRampToValueAtTime(hurt?430:410,t+0.1);
+      o.frequency.exponentialRampToValueAtTime(hurt?250:230,t+dur);
+    }
+    f1.type='bandpass'; f1.frequency.value=800;  f1.Q.value=7;   // «а»
+    f2.type='bandpass'; f2.frequency.value=1200; f2.Q.value=6;
+    f3.type='bandpass'; f3.frequency.value=2700; f3.Q.value=3;   // крикливый верх
+    var vib=AC.createOscillator(), vg=AC.createGain();
+    vib.frequency.value=die?7.5:12; vg.gain.value=die?22:14;
+    vib.connect(vg); vg.connect(o.frequency);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.04);
+    g.gain.setValueAtTime(vol,t+dur*0.55);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.1);
+    o.connect(sh); sh.connect(f1); sh.connect(f2); sh.connect(f3);
+    f1.connect(g); f2.connect(g); f3.connect(g); g.connect(bus);
+    o.start(t); vib.start(t); o.stop(t+dur+0.15); vib.stop(t+dur+0.15);
+    noiseBand(t,dur*0.8,die?0.34:0.24,2000,1.2);                 // сорванное дыхание
+    if(die){ noiseBand(t+dur,0.4,0.42,160,1.0); }                // грохот падения
   }catch(e){}
 }
 function voiceOf(kind,what){
-  if(kind==='lion') roar(what!=='hurt');
-  else if(kind==='ant') antVoice(what==='die'?7:4,what!=='hurt');
-  else if(kind==='fat') scream(what==='die');
+  if(kind==='lion') roar(what);
+  else if(kind==='ant') antVoice(what);
+  else if(kind==='fat') scream(what);
 }
 
 /* ---------- музыка ---------- */
@@ -959,9 +1073,9 @@ function makeLion(){
       this.tm+=dt; this.danger=null;
       if(this.st==='prowl'){
         this.face=(P.x<this.x)?-1:1; this.x+=this.face*30*dt;
-        if(this.tm>1.9){ this.st='crouch'; this.tm=0; this.dir=this.face; roar(true); }
+        if(this.tm>1.9){ this.st='crouch'; this.tm=0; this.dir=this.face; roar('charge'); }
       } else if(this.st==='crouch'){
-        if(this.tm>0.6){ this.st='charge'; this.tm=0; roar(false); }
+        if(this.tm>0.6){ this.st='charge'; this.tm=0; roar('charge2'); }
       } else if(this.st==='charge'){
         this.x+=this.dir*250*dt;
         this.danger={x:this.x-20,y:this.y-24,w:40,h:24};
@@ -998,9 +1112,9 @@ function makeAnt(){
       this.face=(P.x<this.x)?-1:1;
       if(this.st==='walk'){
         this.x+=this.face*(P.frozen?26:64)*dt;
-        if(this.tm>1.7&&!P.frozen){ this.st='rear'; this.tm=0; antVoice(4,false); }
+        if(this.tm>1.7&&!P.frozen){ this.st='rear'; this.tm=0; antVoice('call'); }
       } else if(this.st==='rear'){
-        if(this.tm>0.4){ this.st='lunge'; this.tm=0; antVoice(2,true); }
+        if(this.tm>0.4){ this.st='lunge'; this.tm=0; antVoice('click'); }
       } else if(this.st==='lunge'){
         this.x+=this.face*230*dt;
         this.danger={x:this.x-16,y:this.y-18,w:32,h:18};
@@ -1034,7 +1148,7 @@ function makeFat(){
         this.x+=this.face*22*dt;
         if(this.tm>1.8){ this.st='wind'; this.tm=0; }
       } else if(this.st==='wind'){
-        if(this.tm>0.5){ this.st='thrust'; this.tm=0; scream(false); }
+        if(this.tm>0.5){ this.st='thrust'; this.tm=0; scream('shout'); }
       } else if(this.st==='thrust'){
         var d0=this.face>0?this.x+34:this.x-92;
         this.danger={x:d0,y:this.y-34,w:58,h:16};
@@ -1072,9 +1186,9 @@ S.arena=function(){
   function startRound(r){
     round=r; P.hp=P.max; P.state='idle'; P.atk=0; P.roll=0; P.inv=0; P.frozen=false; P.x=150; P.face=1;
     P.y=0; P.vy=0;
-    if(r===0){ P.weapon='fists'; E=makeLion(); mode='fight'; roar(true); }
-    if(r===1){ rack=true; E=makeAnt(); P.frozen=true; mode='scared'; t=0; antVoice(6,true); }
-    if(r===2){ E=makeFat(); mode='fight'; scream(false); }
+    if(r===0){ P.weapon='fists'; E=makeLion(); mode='fight'; roar('intro'); }
+    if(r===1){ rack=true; E=makeAnt(); P.frozen=true; mode='scared'; t=0; antVoice('click'); }
+    if(r===2){ E=makeFat(); mode='fight'; scream('shout'); }
   }
   function dlg(lines,after){ d=Dialog(lines,after); mode='dialog'; }
   dlg([['narr','Рома поднялся по лестнице. Внизу арена, на арене Горелан. И лев.'],
@@ -1150,7 +1264,7 @@ S.arena=function(){
                 if(E.kind==='fat'){ hole=1; holeX=E.x; } } }
             else {
               sfx('hit');
-              if(E.kind==='fat'&&E.muddy){ E.muddy=false; scream(false);
+              if(E.kind==='fat'&&E.muddy){ E.muddy=false; scream('hurt');
                 flash('УДАР УТОНУЛ В ЖИРЕ. ОН ПРОСТО БЫЛ В ГРЯЗИ'); }
               else if(E.kind==='fat') flash('МОЛОТ НЕ БЕРЁТ ЖИР — БЕГИ К СТОЙКЕ ЗА МЕЧОМ');
               else flash('КУЛАКИ НЕ БЕРУТ ПАНЦИРЬ — БЕГИ К СТОЙКЕ ЗА МОЛОТОМ');
