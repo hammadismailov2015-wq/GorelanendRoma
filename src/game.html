@@ -39,14 +39,15 @@ h1{margin:2px 0 8px; font-family:var(--f-display); font-size:clamp(34px,8vw,62px
 .mute:focus-visible,.padbtn:focus-visible{outline:2px solid var(--amber); outline-offset:2px}
 canvas#screen{display:block; width:100%; aspect-ratio:16/9; background:#0A0706;
   border-radius:3px; border:2px solid #0A0706; touch-action:none}
-.pad{display:none; margin-top:12px; gap:10px; align-items:center; justify-content:space-between}
+.pad{display:none; margin-top:12px; gap:10px; align-items:center}
 @media (pointer:coarse){.pad{display:flex}}
-.padside{display:flex; gap:10px}
-.padbtn{font-family:var(--f-display); font-size:17px; color:var(--paper); background:var(--ink2);
-  border:2px solid var(--line); border-radius:12px; width:62px; height:52px; cursor:pointer;
-  touch-action:none; user-select:none; -webkit-user-select:none}
+.padside{display:flex; gap:6px; flex:1 1 0; min-width:0}
+.padside:last-child{justify-content:flex-end}
+.padbtn{font-family:var(--f-display); font-size:16px; color:var(--paper); background:var(--ink2);
+  border:2px solid var(--line); border-radius:12px; flex:1 1 0; min-width:0; max-width:74px;
+  height:54px; padding:0 2px; cursor:pointer; touch-action:none; user-select:none; -webkit-user-select:none}
 .padbtn:active{background:var(--rust); border-color:var(--amber)}
-.padbtn small{display:block; font-family:var(--f-body); font-size:9px; letter-spacing:.06em; color:var(--dust)}
+.padbtn small{display:block; font-family:var(--f-body); font-size:8px; letter-spacing:.04em; color:var(--dust)}
 .keys{display:flex; flex-wrap:wrap; gap:8px 20px; color:var(--dust); font-size:13px}
 .keys span{display:inline-flex; align-items:center; gap:7px}
 kbd{font-family:var(--f-body); font-size:11px; font-weight:500; color:var(--paper);
@@ -82,9 +83,12 @@ footer .hand{font-family:var(--f-hand); font-size:20px; color:var(--sand); displ
         <button class="padbtn" type="button" data-btn="R" aria-label="Вправо">▶</button>
       </div>
       <div class="padside">
-        <button class="padbtn" type="button" data-btn="U" aria-label="Вверх, взять">▲<small>ВЗЯТЬ</small></button>
+        <button class="padbtn" type="button" data-btn="U" aria-label="Вверх, взять, войти">▲<small>ВЗЯТЬ</small></button>
+        <button class="padbtn" type="button" data-btn="D" aria-label="Присесть">▼<small>ПРИСЕСТЬ</small></button>
+      </div>
+      <div class="padside">
         <button class="padbtn" type="button" data-btn="B" aria-label="Кувырок">X<small>КУВЫРОК</small></button>
-        <button class="padbtn" type="button" data-btn="A" aria-label="Действие">Z<small>УДАР</small></button>
+        <button class="padbtn" type="button" data-btn="A" aria-label="Удар, дальше">Z<small>УДАР</small></button>
       </div>
     </div>
   </div>
@@ -94,6 +98,7 @@ footer .hand{font-family:var(--f-hand); font-size:20px; color:var(--sand); displ
     <span><kbd>Z</kbd> / <kbd>пробел</kbd> удар, дальше</span>
     <span><kbd>X</kbd> кувырок</span>
     <span><kbd>↑</kbd> взять, войти</span>
+    <span><kbd>↓</kbd> присесть за ящиком</span>
     <span><kbd>Esc</kbd> глава заново</span>
   </div>
 
@@ -943,7 +948,7 @@ S.escape=function(){
   var GORX=880, gorFace=1;
   function say(lines,after){ d=Dialog(lines,after); mode='talk'; }
   say([['narr','Коридор. Где-то наверху всё ещё хлопают.'],
-       ['roma','Надо искать выход. Мимо этих в чёрном — тихо: [↓] присесть за ящиком.']],function(){mode='play'});
+       ['roma','Надо искать выход. Мимо этих в чёрном — тихо: жми ↓ (присесть) за ящиком.']],function(){mode='play'});
   function crouching(){ return isDown('D'); }
   function hidden(){
     if(!crouching()) return false;
