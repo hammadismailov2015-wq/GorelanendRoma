@@ -36,9 +36,26 @@ h1{margin:2px 0 8px; font-family:var(--f-display); font-size:clamp(34px,8vw,62px
 .mute{margin-left:auto; font:inherit; font-size:12px; letter-spacing:.06em; color:var(--dust);
   background:transparent; border:1px solid var(--line); border-radius:999px; padding:4px 12px; cursor:pointer}
 .mute:hover{color:var(--sand); border-color:rgba(233,200,124,.4)}
+.cab-top .mute+.mute{margin-left:0}
 .mute:focus-visible,.padbtn:focus-visible{outline:2px solid var(--amber); outline-offset:2px}
+.screenwrap{display:block}
 canvas#screen{display:block; width:100%; aspect-ratio:16/9; background:#0A0706;
   border-radius:3px; border:2px solid #0A0706; touch-action:none}
+body.immersive-on{overflow:hidden}
+.cab.immersive{position:fixed; inset:0; z-index:9999; margin:0; border:0; border-radius:0;
+  padding:5px; background:#0A0706; display:flex; flex-direction:column; gap:5px}
+.cab.immersive .cab-top{flex:0 0 auto; padding:0 2px}
+/* на низком экране (телефон боком) отдаём игре всё, что можно */
+@media (max-height:560px){
+  .cab.immersive .chip{display:none}
+  .cab.immersive .mute{padding:2px 10px; font-size:11px}
+  .cab.immersive .padbtn{height:42px; font-size:14px}
+  .cab.immersive .padbtn small{font-size:7px}
+}
+.cab.immersive .screenwrap{flex:1 1 auto; min-height:0; display:flex; align-items:center; justify-content:center}
+.cab.immersive canvas#screen{width:auto; height:auto; aspect-ratio:auto; border-radius:0; border:0}
+.cab.immersive .pad{flex:0 0 auto; margin-top:0}
+@media (pointer:coarse){.cab.immersive .padbtn{height:46px}}
 .pad{display:none; margin-top:12px; gap:10px; align-items:center}
 @media (pointer:coarse){.pad{display:flex}}
 .padside{display:flex; gap:6px; flex:1 1 0; min-width:0}
@@ -74,9 +91,12 @@ footer .hand{font-family:var(--f-hand); font-size:20px; color:var(--sand); displ
   <div class="cab">
     <div class="cab-top">
       <span class="chip" id="chapter">Глава 1 · Конфета от дяди Толи</span>
+      <button class="mute" id="fs" type="button" aria-pressed="false">На весь экран</button>
       <button class="mute" id="mute" type="button" aria-pressed="false">Звук включён</button>
     </div>
-    <canvas id="screen" width="480" height="270" aria-label="Игровой экран: Горелан и Рома"></canvas>
+    <div class="screenwrap" id="screenwrap">
+      <canvas id="screen" width="480" height="270" aria-label="Игровой экран: Горелан и Рома"></canvas>
+    </div>
     <div class="pad" id="pad">
       <div class="padside">
         <button class="padbtn" type="button" data-btn="L" aria-label="Влево">◀</button>
@@ -99,7 +119,8 @@ footer .hand{font-family:var(--f-hand); font-size:20px; color:var(--sand); displ
     <span><kbd>X</kbd> кувырок</span>
     <span><kbd>↑</kbd> прыжок</span>
     <span><kbd>↓</kbd> присесть за ящиком</span>
-    <span><kbd>Esc</kbd> глава заново</span>
+    <span><kbd>R</kbd> / <kbd>Esc</kbd> глава заново</span>
+    <span><kbd>F</kbd> на весь экран</span>
   </div>
 
   <div class="cards">
@@ -127,21 +148,70 @@ footer .hand{font-family:var(--f-hand); font-size:20px; color:var(--sand); displ
 var W=480,H=270;
 var cv=document.getElementById('screen'), ctx=cv.getContext('2d');
 var chapterEl=document.getElementById('chapter');
+var cabEl=document.querySelector('.cab'), swrapEl=document.getElementById('screenwrap');
+var fsBtn=document.getElementById('fs'), immersive=false;
 function fitCanvas(){
   var r=cv.getBoundingClientRect(); if(!r.width) return;
   var dpr=Math.min(window.devicePixelRatio||1,2);
   var bw=Math.max(480,Math.min(1600,Math.round(r.width*dpr)));
   if(cv.width!==bw){ cv.width=bw; cv.height=Math.round(bw*H/W); }
 }
-window.addEventListener('resize',fitCanvas);
+window.addEventListener('resize',function(){ layoutBig(); fitCanvas(); });
+window.addEventListener('orientationchange',function(){ setTimeout(function(){ layoutBig(); fitCanvas(); },200); });
+
+/* ---------- на весь экран ---------- */
+function layoutBig(){
+  if(!immersive){ cv.style.width=''; cv.style.height=''; return; }
+  var aw=swrapEl.clientWidth, ah=swrapEl.clientHeight;
+  if(!aw||!ah) return;
+  var sc=Math.min(aw/W,ah/H);
+  cv.style.width=Math.floor(W*sc)+'px';
+  cv.style.height=Math.floor(H*sc)+'px';
+}
+function setBig(on){
+  immersive=on;
+  cabEl.classList.toggle('immersive',on);
+  document.body.classList.toggle('immersive-on',on);
+  fsBtn.textContent=on?'Свернуть':'На весь экран';
+  fsBtn.setAttribute('aria-pressed',on?'true':'false');
+  layoutBig(); fitCanvas();
+  setTimeout(function(){ layoutBig(); fitCanvas(); },140);
+}
+function enterBig(){
+  setBig(true);
+  var req=cabEl.requestFullscreen||cabEl.webkitRequestFullscreen;
+  if(req){ try{ var pr=req.call(cabEl); if(pr&&pr.catch) pr.catch(function(){}); }catch(e){} }
+  try{ if(screen.orientation&&screen.orientation.lock){
+    var lk=screen.orientation.lock('landscape'); if(lk&&lk.catch) lk.catch(function(){}); } }catch(e){}
+}
+function exitBig(){
+  setBig(false);
+  try{
+    var ex=document.exitFullscreen||document.webkitExitFullscreen;
+    if(ex&&(document.fullscreenElement||document.webkitFullscreenElement)) ex.call(document);
+  }catch(e){}
+  try{ if(screen.orientation&&screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
+}
+function toggleBig(){ if(immersive) exitBig(); else enterBig(); }
+fsBtn.addEventListener('click',toggleBig);
+document.addEventListener('fullscreenchange',function(){
+  if(!document.fullscreenElement && immersive) setBig(false);
+});
+document.addEventListener('webkitfullscreenchange',function(){
+  if(!document.webkitFullscreenElement && immersive) setBig(false);
+});
 
 /* ---------- ввод ---------- */
 var down={}, hit={};
 var MAP={ArrowLeft:'L',KeyA:'L',ArrowRight:'R',KeyD:'R',ArrowUp:'U',KeyW:'U',ArrowDown:'D',KeyS:'D',
-  Space:'A',KeyZ:'A',Enter:'A',NumpadEnter:'A',KeyX:'B',ShiftLeft:'B',ShiftRight:'B',Escape:'P'};
+  Space:'A',KeyZ:'A',Enter:'A',NumpadEnter:'A',KeyX:'B',ShiftLeft:'B',ShiftRight:'B',
+  Escape:'P',KeyR:'P'};
 function vpress(v){ if(!down[v]) hit[v]=true; down[v]=true; }
 function vrelease(v){ down[v]=false; }
 window.addEventListener('keydown',function(e){
+  if(e.code==='KeyF'){ e.preventDefault(); toggleBig(); return; }
+  // Esc в полноэкранном режиме сворачивает окно — главу тогда не перезапускаем
+  if(e.code==='Escape' && (immersive||document.fullscreenElement)) return;
   var v=MAP[e.code]; if(!v) return;
   if(!e.repeat) vpress(v); else down[v]=true;
   if(v!=='P') e.preventDefault();
