@@ -392,6 +392,73 @@ function gravity(o,dt){
 function jumpNow(o){ o.vy=-170; sfx('jump'); }
 function rollNow(o){ o.roll=0.42; sfx('roll'); }
 
+/* ---------- голоса зверей и людей ---------- */
+function noiseBand(t,dur,vol,freq,q){
+  if(!AC) return;
+  try{
+    var n=Math.max(1,Math.floor(AC.sampleRate*dur)), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0);
+    for(var i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    var src=AC.createBufferSource(), g=AC.createGain(), f=AC.createBiquadFilter();
+    src.buffer=b; f.type='bandpass'; f.frequency.value=freq; f.Q.value=q||4; g.gain.value=vol;
+    src.connect(f); f.connect(g); g.connect(AC.destination); src.start(t);
+  }catch(e){}
+}
+/* лев: низкий рык с дрожью и придыханием */
+function roar(big){
+  if(muted||!AC) return;
+  try{
+    var t=AC.currentTime, dur=big?0.75:0.34;
+    var o=AC.createOscillator(), o2=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter();
+    o.type='sawtooth'; o.frequency.setValueAtTime(big?125:170,t);
+    o.frequency.exponentialRampToValueAtTime(big?54:85,t+dur);
+    o2.type='square'; o2.frequency.setValueAtTime(big?62:86,t);
+    o2.frequency.exponentialRampToValueAtTime(big?27:44,t+dur);
+    f.type='lowpass'; f.frequency.setValueAtTime(950,t); f.frequency.exponentialRampToValueAtTime(320,t+dur);
+    var lfo=AC.createOscillator(), lg=AC.createGain();
+    lfo.frequency.value=big?24:31; lg.gain.value=0.04; lfo.connect(lg); lg.connect(g.gain);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(big?0.13:0.09,t+0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.12);
+    o.connect(f); o2.connect(f); f.connect(g); g.connect(AC.destination);
+    o.start(t); o2.start(t); lfo.start(t);
+    o.stop(t+dur+0.2); o2.stop(t+dur+0.2); lfo.stop(t+dur+0.2);
+    noiseBand(t,dur*0.8,0.035,420,1.4);
+  }catch(e){}
+}
+/* муравей: стридуляция — сухой скрип брюшком, плюс щелчки челюстей */
+function antVoice(n,click){
+  if(muted||!AC) return;
+  var t=AC.currentTime, i;
+  for(i=0;i<(n||5);i++) noiseBand(t+i*0.052,0.045,0.055,2400+(i%2)*1100,7);
+  if(click){ noiseBand(t,0.02,0.09,5200,3); noiseBand(t+0.07,0.02,0.07,4200,3); }
+}
+/* человек: крик с формантами «а» и дрожью в голосе */
+function scream(fall){
+  if(muted||!AC) return;
+  try{
+    var t=AC.currentTime, dur=fall?0.95:0.36;
+    var o=AC.createOscillator(), g=AC.createGain(), f1=AC.createBiquadFilter(), f2=AC.createBiquadFilter();
+    o.type='sawtooth'; o.frequency.setValueAtTime(fall?340:290,t);
+    if(fall) o.frequency.exponentialRampToValueAtTime(105,t+dur);
+    else { o.frequency.exponentialRampToValueAtTime(395,t+0.11);
+           o.frequency.exponentialRampToValueAtTime(250,t+dur); }
+    f1.type='bandpass'; f1.frequency.value=800; f1.Q.value=6;
+    f2.type='bandpass'; f2.frequency.value=1180; f2.Q.value=5;
+    var vib=AC.createOscillator(), vg=AC.createGain();
+    vib.frequency.value=fall?7:12; vg.gain.value=fall?16:10; vib.connect(vg); vg.connect(o.frequency);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.10,t+0.045);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(f1); o.connect(f2); f1.connect(g); f2.connect(g); g.connect(AC.destination);
+    o.start(t); vib.start(t); o.stop(t+dur+0.06); vib.stop(t+dur+0.06);
+  }catch(e){}
+}
+function voiceOf(kind,what){
+  if(kind==='lion') roar(what!=='hurt');
+  else if(kind==='ant') antVoice(what==='die'?7:4,what!=='hurt');
+  else if(kind==='fat') scream(what==='die');
+}
+
 /* ---------- музыка ---------- */
 /* маленький чиптюн-секвенсор: у каждой главы своя тема, всё считается
    прямо в браузере, никаких файлов грузить не надо */
@@ -883,9 +950,9 @@ function makeLion(){
       this.tm+=dt; this.danger=null;
       if(this.st==='prowl'){
         this.face=(P.x<this.x)?-1:1; this.x+=this.face*30*dt;
-        if(this.tm>1.9){ this.st='crouch'; this.tm=0; this.dir=this.face; }
+        if(this.tm>1.9){ this.st='crouch'; this.tm=0; this.dir=this.face; roar(true); }
       } else if(this.st==='crouch'){
-        if(this.tm>0.6){ this.st='charge'; this.tm=0; sfx('hurt'); }
+        if(this.tm>0.6){ this.st='charge'; this.tm=0; roar(false); }
       } else if(this.st==='charge'){
         this.x+=this.dir*250*dt;
         this.danger={x:this.x-20,y:this.y-24,w:40,h:24};
@@ -922,9 +989,9 @@ function makeAnt(){
       this.face=(P.x<this.x)?-1:1;
       if(this.st==='walk'){
         this.x+=this.face*(P.frozen?26:64)*dt;
-        if(this.tm>1.7&&!P.frozen){ this.st='rear'; this.tm=0; }
+        if(this.tm>1.7&&!P.frozen){ this.st='rear'; this.tm=0; antVoice(4,false); }
       } else if(this.st==='rear'){
-        if(this.tm>0.4){ this.st='lunge'; this.tm=0; sfx('hit'); }
+        if(this.tm>0.4){ this.st='lunge'; this.tm=0; antVoice(2,true); }
       } else if(this.st==='lunge'){
         this.x+=this.face*230*dt;
         this.danger={x:this.x-16,y:this.y-18,w:32,h:18};
@@ -958,7 +1025,7 @@ function makeFat(){
         this.x+=this.face*22*dt;
         if(this.tm>1.8){ this.st='wind'; this.tm=0; }
       } else if(this.st==='wind'){
-        if(this.tm>0.5){ this.st='thrust'; this.tm=0; sfx('hit'); }
+        if(this.tm>0.5){ this.st='thrust'; this.tm=0; scream(false); }
       } else if(this.st==='thrust'){
         var d0=this.face>0?this.x+34:this.x-92;
         this.danger={x:d0,y:this.y-34,w:58,h:16};
@@ -996,9 +1063,9 @@ S.arena=function(){
   function startRound(r){
     round=r; P.hp=P.max; P.state='idle'; P.atk=0; P.roll=0; P.inv=0; P.frozen=false; P.x=150; P.face=1;
     P.y=0; P.vy=0;
-    if(r===0){ P.weapon='fists'; E=makeLion(); mode='fight'; }
-    if(r===1){ rack=true; E=makeAnt(); P.frozen=true; mode='scared'; t=0; }
-    if(r===2){ E=makeFat(); mode='fight'; }
+    if(r===0){ P.weapon='fists'; E=makeLion(); mode='fight'; roar(true); }
+    if(r===1){ rack=true; E=makeAnt(); P.frozen=true; mode='scared'; t=0; antVoice(6,true); }
+    if(r===2){ E=makeFat(); mode='fight'; scream(false); }
   }
   function dlg(lines,after){ d=Dialog(lines,after); mode='dialog'; }
   dlg([['narr','Рома поднялся по лестнице. Внизу арена, на арене Горелан. И лев.'],
@@ -1069,11 +1136,12 @@ S.arena=function(){
             P.hitDone=true;
             var dm=dmgOf(P.weapon,E.kind);
             if(dm>0){ E.hp-=dm; sh=3; sfx(P.weapon==='hammer'?'heavy':'hit');
+              voiceOf(E.kind,E.hp<=0?'die':'hurt');
               if(E.hp<=0){ mode='win'; win=0; clap=4; sfx(E.kind==='fat'?'boom':'win');
                 if(E.kind==='fat'){ hole=1; holeX=E.x; } } }
             else {
               sfx('hit');
-              if(E.kind==='fat'&&E.muddy){ E.muddy=false;
+              if(E.kind==='fat'&&E.muddy){ E.muddy=false; scream(false);
                 flash('УДАР УТОНУЛ В ЖИРЕ. ОН ПРОСТО БЫЛ В ГРЯЗИ'); }
               else if(E.kind==='fat') flash('МОЛОТ НЕ БЕРЁТ ЖИР — БЕГИ К СТОЙКЕ ЗА МЕЧОМ');
               else flash('КУЛАКИ НЕ БЕРУТ ПАНЦИРЬ — БЕГИ К СТОЙКЕ ЗА МОЛОТОМ');
