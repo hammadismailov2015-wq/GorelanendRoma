@@ -525,46 +525,66 @@ function antVoice(kind){
   antBuzz(t,0.32,0.34,240,210);
   if(kind==='click'){ noiseBand(t,0.03,0.7,5000,2); noiseBand(t+0.07,0.03,0.6,4200,2); }
 }
-/* ЧЕЛОВЕК. Крик с формантами «а», сорванным придыханием и дрожью.
-   Смертный вопль долгий, срывается и падает вниз. */
+/* ЧЕЛОВЕК. Взрослый мужик орёт «А-А-А». Никакого ровного вибрато: от дрожи
+   12 раз в секунду получается блеяние козы. Вместо неё — низкий голос,
+   мужские форманты и лёгкая неровность, как у живых связок. */
+function screamPitch(pts,u){                    // ломаная по опорным точкам
+  var i;
+  if(u<=pts[0][0]) return pts[0][1];
+  for(i=1;i<pts.length;i++){
+    if(u<=pts[i][0]){
+      var a=pts[i-1], b=pts[i], k=(u-a[0])/Math.max(0.0001,b[0]-a[0]);
+      return a[1]+(b[1]-a[1])*k;
+    }
+  }
+  return pts[pts.length-1][1];
+}
 function scream(kind){
   if(muted||!AC) return;
   var bus=sfxBus(); if(!bus) return;
   var die=kind==='die', hurt=kind==='hurt';
-  var dur=die?1.5:hurt?0.4:0.5;
-  var vol=die?0.95:hurt?0.72:0.8;
+  var dur=die?1.5:hurt?0.42:0.55;
+  var vol=die?0.68:hurt?0.66:0.72;
+  /* опорные точки высоты голоса: рывок вверх на выдохе, потом вниз.
+     у смертного вопля голос ещё и срывается посередине */
+  var pts = die
+    ? [[0,175],[0.07,242],[0.34,224],[0.42,148],[0.5,212],[0.72,158],[1,58]]
+    : hurt
+      ? [[0,168],[0.09,232],[0.55,196],[1,140]]
+      : [[0,152],[0.10,218],[0.60,206],[1,158]];
   try{
     var t=AC.currentTime;
-    var o=AC.createOscillator(), sh=AC.createWaveShaper(), g=AC.createGain();
+    var o=AC.createOscillator(), chest=AC.createOscillator();
+    var sh=AC.createWaveShaper(), pre=AC.createBiquadFilter(), g=AC.createGain();
     var f1=AC.createBiquadFilter(), f2=AC.createBiquadFilter(), f3=AC.createBiquadFilter();
-    sh.curve=distCurve(14); sh.oversample='2x';
-    o.type='sawtooth';
-    if(die){
-      o.frequency.setValueAtTime(400,t);
-      o.frequency.exponentialRampToValueAtTime(470,t+0.12);
-      o.frequency.exponentialRampToValueAtTime(300,t+0.5);      // голос срывается
-      o.frequency.exponentialRampToValueAtTime(360,t+0.62);
-      o.frequency.exponentialRampToValueAtTime(95,t+dur);
-    } else {
-      o.frequency.setValueAtTime(hurt?330:300,t);
-      o.frequency.exponentialRampToValueAtTime(hurt?430:410,t+0.1);
-      o.frequency.exponentialRampToValueAtTime(hurt?250:230,t+dur);
+    sh.curve=distCurve(9); sh.oversample='2x';
+    o.type='sawtooth'; chest.type='triangle';
+    /* высота с мелкой неровностью — живой голос никогда не держит ровно */
+    var stepN=Math.max(6,Math.floor(dur/0.05)), i, u, f;
+    for(i=0;i<=stepN;i++){
+      u=i/stepN; f=screamPitch(pts,u)*(1+(Math.random()*0.026-0.013));
+      o.frequency.setValueAtTime(f,t+u*dur);
+      chest.frequency.setValueAtTime(f*0.5,t+u*dur);
     }
-    f1.type='bandpass'; f1.frequency.value=800;  f1.Q.value=7;   // «а»
-    f2.type='bandpass'; f2.frequency.value=1200; f2.Q.value=6;
-    f3.type='bandpass'; f3.frequency.value=2700; f3.Q.value=3;   // крикливый верх
-    var vib=AC.createOscillator(), vg=AC.createGain();
-    vib.frequency.value=die?7.5:12; vg.gain.value=die?22:14;
-    vib.connect(vg); vg.connect(o.frequency);
+    pre.type='lowpass'; pre.frequency.value=3600; pre.Q.value=0.7;
+    f1.type='bandpass'; f1.frequency.value=640;  f1.Q.value=3.2;   // мужское «а»
+    f2.type='bandpass'; f2.frequency.value=1050; f2.Q.value=3.0;
+    f3.type='bandpass'; f3.frequency.value=2500; f3.Q.value=2.0;   // крикливый верх
+    var cg=AC.createGain(); cg.gain.value=0.5;                     // грудной низ
     g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(vol,t+0.04);
-    g.gain.setValueAtTime(vol,t+dur*0.55);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.1);
-    o.connect(sh); sh.connect(f1); sh.connect(f2); sh.connect(f3);
-    f1.connect(g); f2.connect(g); f3.connect(g); g.connect(bus);
-    o.start(t); vib.start(t); o.stop(t+dur+0.15); vib.stop(t+dur+0.15);
-    noiseBand(t,dur*0.8,die?0.34:0.24,2000,1.2);                 // сорванное дыхание
-    if(die){ noiseBand(t+dur,0.4,0.42,160,1.0); }                // грохот падения
+    g.gain.exponentialRampToValueAtTime(vol,t+0.035);
+    g.gain.setValueAtTime(vol,t+dur*0.6);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.12);
+    o.connect(sh); sh.connect(pre);
+    pre.connect(f1); pre.connect(f2); pre.connect(f3);
+    f1.connect(g); f2.connect(g); f3.connect(g);
+    chest.connect(cg); cg.connect(g);
+    g.connect(bus);
+    o.start(t); chest.start(t);
+    o.stop(t+dur+0.18); chest.stop(t+dur+0.18);
+    noiseBand(t,0.05,0.30,900,1.0);                                // придых в начале
+    noiseBand(t+0.04,dur*0.8,die?0.26:0.18,1800,1.1);              // сорванное дыхание
+    if(die){ noiseBand(t+dur,0.45,0.36,140,0.9); }                 // грохот падения
   }catch(e){}
 }
 function voiceOf(kind,what){
