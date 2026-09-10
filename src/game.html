@@ -561,6 +561,7 @@ S.bench=function(){
     update:function(dt){
       t+=dt;
       if(ph==='in'){ tx-=70*dt; if(tx<=300){ tx=300; ph='talk'; talk(part1,function(){ ph='choice'; }); } }
+      else if(ph!=='bang'&&d&&d.i>=7){ tx+=64*dt; }   // сказал «нате конфетку» и ушёл
       else if(ph==='talk'||ph==='talk2'){ if(d) d.update(dt); }
       else if(ph==='choice'){
         if(press('A')){ chosen=true; eaten=true; sfx('pick'); ph='talk2'; talk(part2,function(){ ph='bang'; t=0; }); }
@@ -584,7 +585,8 @@ S.bench=function(){
       kid(172,fallen?230:226,{pal:GOR,hairStyle:'curls',pose:fallen?'lie':'idle',face:1,big:1,t:t});
       kid(202,fallen?230:226,{pal:ROM,pose:fallen?'lie':'idle',face:1,t:t});
       bench(148,214);
-      if(ph!=='bang') adult(tx,214,{pal:TOL,kind:'tolya',face:-1,walk:ph==='in',t:t,smile:true});
+      if(ph!=='bang'&&tx<545)
+        adult(tx,214,{pal:TOL,kind:'tolya',face:tx>300?1:-1,walk:ph==='in'||tx>300,t:t,smile:true});
       if(ph==='choice'){
         R(120,150,240,44,'rgba(20,15,12,.94)'); R(120,150,240,1,'#E9C87C'); R(120,193,240,1,'#E9C87C');
         T('Съесть конфету?',132,168,{size:12,weight:'500',color:'#F6ECD8'});
@@ -611,7 +613,8 @@ S.cell=function(){
     update:function(dt){
       t+=dt;
       if(ph==='wake'){ d.update(dt); return; }
-      if(ph==='drag'){ d.update(dt); dragX-=40*dt; if(d.done) ph='play'; return; }
+      if(trig.a && dragX>-110) dragX-=40*dt;     // уходят за край и не возвращаются
+      if(ph==='drag'){ d.update(dt); if(d.done) ph='play'; return; }
       var mv=0;
       if(isDown('L')) mv=-1; if(isDown('R')) mv=1;
       if(press('U')) jumpNow(J);
@@ -644,7 +647,7 @@ S.cell=function(){
       R(410,60,44,156,'#2A211A');
       for(var s=0;s<8;s++) R(412,196-s*18,40,6,'#4A3A2A');
       T('наверх',432,52,{size:9,color:'#A08D7B',align:'center'});
-      if(ph==='drag'||dragX<520){
+      if(trig.a && dragX>-110){
         adult(dragX,150,{pal:GRD,kind:'guard',face:-1,walk:true,t:t});
         kid(dragX+26,150,{pal:GOR,hairStyle:'curls',pose:'scared',face:-1,big:1,t:t});
         adult(dragX+50,150,{pal:GRD,kind:'guard',face:-1,walk:true,t:t});
@@ -828,6 +831,7 @@ S.arena=function(){
       if(mode==='win'){
         win+=dt;
         if(win>2.2){
+          E=null;                       // побеждённый больше не появляется
           if(round===0){ dlg([['roma','Он победил льва! Голыми руками!'],
               ['narr','И на сцену вышел пустынный муравей.']],function(){ startRound(1); }); win=0; }
           else if(round===1){ dlg([['narr','На сцену вышел другой человек. Он был весь коричневый.'],
@@ -865,7 +869,8 @@ S.arena=function(){
             P.hitDone=true;
             var dm=dmgOf(P.weapon,E.kind);
             if(dm>0){ E.hp-=dm; sh=3; sfx(P.weapon==='hammer'?'heavy':'hit');
-              if(E.hp<=0){ mode='win'; win=0; clap=4; sfx(round===2?'boom':'win'); if(round===2){hole=1;holeX=E.x;} } }
+              if(E.hp<=0){ mode='win'; win=0; clap=4; sfx(E.kind==='fat'?'boom':'win');
+                if(E.kind==='fat'){ hole=1; holeX=E.x; } } }
             else {
               sfx('hit');
               if(E.kind==='fat'&&E.muddy){ E.muddy=false;
@@ -915,7 +920,11 @@ S.arena=function(){
       R(0,GROUND,W,H-GROUND,'#C9A567'); R(0,GROUND,W,3,'#DDBB7D');
       for(var s2=0;s2<40;s2++) R((s2*37)%W,GROUND+8+((s2*13)%40),3,2,'#B8935A');
       R(0,GROUND,WALL_L,H-GROUND,'#3A2C20'); R(WALL_R,GROUND,W-WALL_R,H-GROUND,'#3A2C20');
-      if(hole){ EL(holeX,GROUND+10,30,10,'#1A120C'); EL(holeX,GROUND+8,28,8,'#0E0906'); }
+      if(hole){
+        EL(holeX,GROUND+9,34,11,'#1A120C'); EL(holeX,GROUND+7,30,9,'#0B0705');
+        R(holeX-34,GROUND+1,10,2,'#1A120C'); R(holeX+26,GROUND+3,12,2,'#1A120C');
+        R(holeX-16,GROUND+18,9,2,'#1A120C'); R(holeX+10,GROUND+20,11,2,'#1A120C');
+      }
       // стойка с оружием
       if(rack){
         R(44,GROUND-40,30,4,'#6B4526'); R(46,GROUND-36,3,36,'#6B4526'); R(69,GROUND-36,3,36,'#6B4526');
@@ -930,10 +939,18 @@ S.arena=function(){
       var blink=P.inv>0&&Math.floor(t*20)%2===0;
       if(!blink) kid(P.x,GROUND+P.y,{pal:GOR,hairStyle:'curls',big:1,face:P.face,pose:pose,
         t:pose==='roll'?(0.4-P.roll):P.wt,atk:P.atk,weapon:P.weapon==='fists'?null:P.weapon});
-      if(E&&(mode!=='win'||win<0.6)) E.draw(t);
-      else if(E&&mode==='win'){
-        ctx.save(); ctx.translate(E.x,GROUND); ctx.rotate(Math.min(1.5708,(win-0.6)*3));
-        ctx.translate(-E.x,-GROUND); E.draw(t); ctx.restore();
+      if(E){
+        if(mode==='win'){
+          var fal=Math.min(1.5708,Math.max(0,(win-0.15)*3.4));      // валится набок
+          var snk=(E.kind==='fat')?Math.max(0,Math.min(1,(win-0.9)/1.1)):0;  // и уходит в дыру
+          var al=(E.kind==='fat')?1:Math.max(0,1-Math.max(0,win-1.1)/0.8);
+          ctx.save();
+          ctx.beginPath(); ctx.rect(0,0,W,GROUND+5); ctx.clip();
+          ctx.globalAlpha=al;
+          ctx.translate(E.x,GROUND+snk*46); ctx.rotate(fal); ctx.translate(-E.x,-GROUND);
+          E.draw(t);
+          ctx.restore();
+        } else E.draw(t);
       }
       ctx.restore();
       /* HUD */
