@@ -575,9 +575,32 @@ function manSound(kind,v){
   }
   if(die) noiseBand(AC.currentTime+dur,0.45,0.27,140,0.9);
 }
-var VOICE={lion:0,man:0,ant:0};
+/* ОХРАНА. Короткие возгласы. «Га?» — высота идёт вверх, от этого и
+   получается вопрос; «Эй!» — вниз, это уже окрик. */
+function guardVoice(kind){
+  if(muted||!AC) return;
+  var low=VOICE.guard===1, k=low?0.72:1;
+  if(kind==='hey')
+    playVoice({dur:0.45,jit:0.03,shim:0.22,noise:0.3,drive:16,vol:0.38,attack:0.025,
+      pts:[[0,180*k],[0.12,238*k],[1,138*k]],
+      formants:[[620*k,2,1],[1500*k,1.6,0.7],[2600,1.2,0.5]],direct:0.32,lp0:3800,lp1:1100});
+  else if(kind==='what')
+    playVoice({dur:0.26,jit:0.03,shim:0.2,noise:0.32,drive:12,vol:0.28,attack:0.03,
+      pts:[[0,120*k],[0.3,138*k],[1,180*k]],
+      formants:[[660*k,2,1],[1200*k,1.7,0.75],[2400,1.2,0.4]],direct:0.3,lp0:3200,lp1:1200});
+  else if(kind==='hm')
+    playVoice({dur:0.22,jit:0.02,shim:0.15,noise:0.25,drive:10,vol:0.22,attack:0.03,
+      pts:[[0,120*k],[1,102*k]],
+      formants:[[500*k,2.2,1],[1100*k,1.8,0.6]],direct:0.3,lp0:2400,lp1:900});
+  else                                        // 'huh' — «Га?»
+    playVoice({dur:0.30,jit:0.025,shim:0.18,noise:0.3,drive:12,vol:0.32,attack:0.03,
+      pts:[[0,132*k],[0.25,150*k],[1,208*k]],
+      formants:[[700*k,2,1],[1150*k,1.7,0.8],[2500,1.2,0.45]],direct:0.3,lp0:3400,lp1:1400});
+}
+var VOICE={lion:0,man:0,ant:0,guard:0};
 try{ var vsRaw=localStorage.getItem('gr_voices');
-     if(vsRaw){ var vsp=JSON.parse(vsRaw); if(vsp&&typeof vsp==='object') VOICE=vsp; } }catch(e){}
+     if(vsRaw){ var vsp=JSON.parse(vsRaw);
+       if(vsp&&typeof vsp==='object'){ if(vsp.guard==null) vsp.guard=0; VOICE=vsp; } } }catch(e){}
 function saveVoices(){ try{ localStorage.setItem('gr_voices',JSON.stringify(VOICE)); }catch(e){} }
 function roar(kind){ if(muted||!AC) return; lionSound(kind||'charge',VOICE.lion); }
 function scream(kind){ if(muted||!AC) return; manSound(kind||'shout',VOICE.man); }
@@ -1016,7 +1039,9 @@ S.sounds=function(){
     {n:'Толстяк',  key:'man',  kind:'shout',
      vars:['Мужик орёт','Панический','Хрип'],  play:function(k){ manSound(k,VOICE.man); }},
     {n:'Муравей',  key:'ant',  kind:'call',
-     vars:['Скрип','Крупный'],                 play:function(k){ antVoice(k); }}
+     vars:['Скрип','Крупный'],                 play:function(k){ antVoice(k); }},
+    {n:'Охрана',   key:'guard',kind:'huh',
+     vars:['Обычный','Басом'],                 play:function(k){ guardVoice(k==='die'?'hey':k); }}
   ];
   var sel=0, t=0, flashRow=-1, flashT=0;
   function play(row,k){ audioOn(); row.play(k); flashRow=rows.indexOf(row); flashT=0.5; }
@@ -1041,17 +1066,17 @@ S.sounds=function(){
       T('ПРОБА ЗВУКОВ',24,38,{size:20,font:FD,color:'#E9C87C'});
       T('выбери, как должен звучать каждый — так и будет в игре',24,54,{size:10,color:'#A08D7B'});
       for(var i=0;i<rows.length;i++){
-        var r=rows[i], y=84+i*38, on=i===sel;
-        if(on) R(18,y-16,444,32,'rgba(244,166,60,.12)');
+        var r=rows[i], y=82+i*33, on=i===sel;
+        if(on) R(18,y-15,444,28,'rgba(244,166,60,.12)');
         if(flashRow===i&&flashT>0){ ctx.globalAlpha=Math.min(1,flashT*2);
-          R(18,y-16,444,32,'rgba(194,74,44,.25)'); ctx.globalAlpha=1; }
+          R(18,y-15,444,28,'rgba(194,74,44,.25)'); ctx.globalAlpha=1; }
         T(on?'▸':' ',24,y,{size:11,color:'#F4A63C'});
         T(r.n,38,y,{size:13,font:FD,color:on?'#F6ECD8':'#A08D7B'});
         T('◀ '+r.vars[VOICE[r.key]]+' ▶',150,y,{size:12,color:on?'#F4A63C':'#8A7967',weight:'500'});
         T('вариант '+(VOICE[r.key]+1)+' из '+r.vars.length,330,y,{size:9,color:'#8A7967'});
       }
       R(18,206,444,1,'rgba(233,200,124,.2)');
-      T('↑ ↓ — кто · ← → — поменять голос · Z — послушать · X — предсмертный',24,224,
+      T('↑ ↓ — кто · ← → — поменять голос · Z — послушать · X — предсмертный (у охраны — окрик)',24,224,
         {size:10,color:'#CDBBA5'});
       T('Esc — назад. Выбор сохраняется.',24,242,{size:10,color:'#A08D7B'});
     }};
@@ -1512,8 +1537,9 @@ S.escape=function(){
   var crates=[220,300,470,640,760,980,1120,1290];
   var TP=[80,250,430,600,720,1030,1200,1360], torches=[];
   for(var ti=0;ti<TP.length;ti++) torches.push({x:TP[ti],st:'wall',t:0,y:118,ang:0,noise:0});
-  var guards=[{x:300,a:250,b:560,dir:1,st:'patrol',tm:0,next:2.6,tx:0},
-              {x:1020,a:940,b:1250,dir:-1,st:'patrol',tm:0,next:3.4,tx:0}];
+  var guards=[{x:300,a:250,b:560,dir:1,st:'patrol',tm:0,next:2.6,tx:0,msg:'',msgT:0},
+              {x:1020,a:940,b:1250,dir:-1,st:'patrol',tm:0,next:3.4,tx:0,msg:'',msgT:0}];
+  function guardSay(g,text,voice){ g.msg=text; g.msgT=1.3; guardVoice(voice); }
   var GORX=880, J={y:0,vy:0,roll:0};
   var CP=[60,620,880,1380], seen=0;          // места, откуда начинаешь заново
   function respawn(){
@@ -1551,10 +1577,10 @@ S.escape=function(){
       var g=guards[i], dd=Math.abs(g.x-tr.x);
       if(dd<bd && g.st!=='stare'){ bd=dd; best=g; }
     }
-    if(best){ best.st='walkto'; best.tx=tr.x; best.tm=0; }
+    if(best){ best.st='walkto'; best.tx=tr.x; best.tm=0; guardSay(best,'А?','what'); }
   }
   function guardStep(g,dt){
-    g.tm+=dt;
+    g.tm+=dt; if(g.msgT>0) g.msgT-=dt;
     if(g.st==='patrol'){
       if(g.x<g.a) g.dir=1; else if(g.x>g.b) g.dir=-1;
       g.x+=g.dir*44*dt;
@@ -1562,7 +1588,8 @@ S.escape=function(){
         if(g.x<=g.a+1&&g.dir<0) g.dir=1;
         if(g.x>=g.b-1&&g.dir>0) g.dir=-1;
       }
-      if(g.tm>g.next){ g.st='turn'; g.tm=0; }
+      if(g.tm>g.next){ g.st='turn'; g.tm=0;
+        if(Math.random()<0.35) guardSay(g,'ХМ?','hm'); }
     } else if(g.st==='turn'){
       if(g.tm>0.42){ g.dir=-g.dir; g.st='patrol'; g.tm=0; g.next=2.2+Math.random()*2.6; sfx('step'); }
     } else if(g.st==='walkto'){
@@ -1599,16 +1626,21 @@ S.escape=function(){
       else if(mv){ face=mv; x+=mv*sp*dt; wt+=dt; }
       gravity(J,dt);
       x=Math.max(24,Math.min(WW-30,x));
-      var spotted=false;
+      var spotted=false, spotter=null;
       for(var i=0;i<guards.length;i++){
         var g=guards[i]; guardStep(g,dt);
         var dx=(x-g.x)*g.dir;
-        if(dx>0 && dx<sight(g) && !hidden()) spotted=true;
+        if(dx>0 && dx<sight(g) && !hidden()){ spotted=true; if(!spotter) spotter=g; }
       }
       if(caught<=0){
         if(spotted){
+          if(seen<=0 && spotter) guardSay(spotter,'ГА?','huh');   // «кто там?»
           seen+=dt;                                   // не мгновенно: полсекунды на то, чтобы убежать или присесть
-          if(seen>0.5){ caught=2.2; seen=0; sfx('alarm'); x=respawn(); }
+          if(seen>0.5){
+            caught=2.2; seen=0; sfx('alarm');
+            if(spotter) guardSay(spotter,'ЭЙ!','hey');
+            x=respawn();
+          }
         } else seen=Math.max(0,seen-dt*1.6);
       } else seen=0;
       if(press('A')){
@@ -1680,7 +1712,14 @@ S.escape=function(){
         var gface=g.dir;
         if(g.st==='turn'){ gface=(g.tm>0.28)?-g.dir:g.dir; }
         adult(g.x,GROUND,{pal:GRD,kind:'guard',face:gface,walk:g.st==='patrol'||g.st==='walkto',t:t});
-        if(g.st==='turn') T('?',g.x,GROUND-58,{size:13,font:FD,color:'#C24A2C',align:'center'});
+        if(g.msgT>0){                                   // пузырь с возгласом
+          var bw=measure(g.msg,12,FD)+14, by=GROUND-76;
+          R(g.x-bw/2,by,bw,17,'rgba(20,15,12,.92)');
+          R(g.x-bw/2,by,bw,1,'#C24A2C'); R(g.x-bw/2,by+16,bw,1,'#C24A2C');
+          R(g.x-2,by+17,4,4,'rgba(20,15,12,.92)');
+          T(g.msg,g.x,by+13,{size:12,font:FD,color:'#F4A63C',align:'center'});
+        }
+        else if(g.st==='turn') T('?',g.x,GROUND-58,{size:13,font:FD,color:'#C24A2C',align:'center'});
         else if(g.st==='walkto') T('?',g.x,GROUND-58,{size:13,font:FD,color:'#F4A63C',align:'center'});
         else if(g.st==='stare') T('. . .',g.x,GROUND-58,{size:11,font:FD,color:'#A08D7B',align:'center'});
       }
