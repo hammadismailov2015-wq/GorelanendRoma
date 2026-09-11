@@ -1,0 +1,2002 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Игра по рассказу «Приключения Омешкина, Ромомэо и Пельмешкина в лесу»: шесть глав.">
+<style>html{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Омешкин, Ромомэо и Пельмешкин</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Podkova:wght@600;800&family=Nunito:wght@400;600;700&family=Pangolin&display=swap">
+<style>
+:root{
+  --night:#0E1410; --night2:#151E17; --panel:#1A241C; --line:#2E3D30;
+  --moss:#8FB877; --birch:#EFE9D6; --fire:#F0A63C; --shroom:#C6453A;
+  --crystal:#6FC3D8; --dust:#93A48C;
+  --f-display:"Podkova",Georgia,serif;
+  --f-body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-hand:"Pangolin","Comic Sans MS",cursive;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; color:var(--birch); font-family:var(--f-body); font-size:15px; line-height:1.6;
+  background-color:var(--night);
+  background-image:
+    repeating-linear-gradient(90deg,rgba(143,184,119,.045) 0 2px,transparent 2px 38px),
+    radial-gradient(ellipse at 50% -10%,rgba(111,195,216,.10),transparent 60%);
+}
+.wrap{max-width:900px; margin:0 auto; padding-left:16px; padding-right:16px; padding-block:26px 44px;
+  display:flex; flex-direction:column; gap:22px}
+.eyebrow{margin:0; font-family:var(--f-hand); font-size:21px; color:var(--moss)}
+h1{margin:4px 0 10px; font-family:var(--f-display); font-weight:800;
+  font-size:clamp(28px,6.4vw,50px); line-height:1.02; letter-spacing:-.01em;
+  text-wrap:balance; color:var(--birch)}
+h1 em{font-style:normal; color:var(--fire)}
+.lede{margin:0; max-width:58ch; color:var(--dust)}
+.cab{background:var(--panel); border:2px solid var(--line); border-radius:14px; padding:12px;
+  box-shadow:0 18px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(143,184,119,.08)}
+.cab-top{display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:0 2px 10px}
+.chip{font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--moss); background:rgba(143,184,119,.12); border:1px solid rgba(143,184,119,.3);
+  border-radius:999px; padding:4px 12px}
+.mute{margin-left:auto; font:inherit; font-size:12px; font-weight:600; color:var(--dust);
+  background:transparent; border:1px solid var(--line); border-radius:999px; padding:4px 12px; cursor:pointer}
+.cab-top .mute+.mute{margin-left:0}
+.mute:hover{color:var(--moss); border-color:rgba(143,184,119,.45)}
+.mute:focus-visible,.padbtn:focus-visible{outline:2px solid var(--fire); outline-offset:2px}
+.screenwrap{display:block}
+canvas#screen{display:block; width:100%; aspect-ratio:16/9; background:#080B09;
+  border-radius:8px; border:2px solid #080B09; touch-action:none}
+body.immersive-on{overflow:hidden}
+.cab.immersive{position:fixed; inset:0; z-index:9999; margin:0; border:0; border-radius:0;
+  padding:5px; background:#080B09; display:flex; flex-direction:column; gap:5px}
+.cab.immersive .cab-top{flex:0 0 auto; padding:0 2px}
+.cab.immersive .screenwrap{flex:1 1 auto; min-height:0; display:flex; align-items:center; justify-content:center}
+.cab.immersive canvas#screen{width:auto; height:auto; aspect-ratio:auto; border-radius:0; border:0}
+.cab.immersive .pad{flex:0 0 auto; margin-top:0}
+@media (max-height:560px){
+  .cab.immersive .chip{display:none}
+  .cab.immersive .mute{padding:2px 10px; font-size:11px}
+  .cab.immersive .padbtn{height:42px; font-size:14px}
+  .cab.immersive .padbtn small{font-size:7px}
+}
+.pad{display:none; margin-top:12px; gap:10px; align-items:center}
+@media (pointer:coarse){.pad{display:flex}}
+.padside{display:flex; gap:6px; flex:1 1 0; min-width:0}
+.padside:last-child{justify-content:flex-end}
+.padbtn{font-family:var(--f-display); font-weight:800; font-size:16px; color:var(--birch);
+  background:var(--night2); border:2px solid var(--line); border-radius:12px;
+  flex:1 1 0; min-width:0; max-width:74px; height:54px; padding:0 2px; cursor:pointer;
+  touch-action:none; user-select:none; -webkit-user-select:none}
+.padbtn:active{background:var(--shroom); border-color:var(--fire)}
+.padbtn small{display:block; font-family:var(--f-body); font-size:8px; font-weight:700;
+  letter-spacing:.04em; color:var(--dust)}
+.keys{display:flex; flex-wrap:wrap; gap:8px 20px; color:var(--dust); font-size:13px}
+.keys span{display:inline-flex; align-items:center; gap:7px}
+kbd{font-family:var(--f-body); font-size:11px; font-weight:700; color:var(--birch);
+  background:var(--night2); border:1px solid var(--line); border-bottom-width:2px;
+  border-radius:5px; padding:2px 7px}
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px}
+.who{background:var(--night2); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
+.who h2{margin:0 0 3px; font-family:var(--f-display); font-weight:800; font-size:17px; color:var(--moss)}
+.who.b h2{color:var(--fire)} .who.c h2{color:var(--shroom)}
+.who p{margin:0; font-size:13.5px; color:var(--dust)}
+footer{border-top:1px solid var(--line); padding-top:16px; color:var(--dust); font-size:13px}
+footer .hand{font-family:var(--f-hand); font-size:19px; color:var(--moss); display:block; margin-bottom:6px}
+footer a{color:var(--crystal)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">вторая тетрадь — теперь игра</p>
+    <h1>Омешкин, Ромомэо и <em>Пельмешкин</em> в лесу</h1>
+    <p class="lede">Отпроситься у мамы на речку, а уйти в лес. Сварить суп из раков и грибов,
+      переночевать в пещере и проснуться на голове у голубого монстра. Шесть глав.</p>
+  </header>
+
+  <div class="cab">
+    <div class="cab-top">
+      <span class="chip" id="chapter">Глава 1 · Дома</span>
+      <button class="mute" id="fs" type="button" aria-pressed="false">На весь экран</button>
+      <button class="mute" id="mute" type="button" aria-pressed="false">Звук и музыка вкл</button>
+    </div>
+    <div class="screenwrap" id="screenwrap">
+      <canvas id="screen" width="480" height="270" aria-label="Игровой экран: приключения в лесу"></canvas>
+    </div>
+    <div class="pad" id="pad">
+      <div class="padside">
+        <button class="padbtn" type="button" data-btn="L" aria-label="Влево">◀</button>
+        <button class="padbtn" type="button" data-btn="R" aria-label="Вправо">▶</button>
+      </div>
+      <div class="padside">
+        <button class="padbtn" type="button" data-btn="U" aria-label="Прыжок">▲<small>ПРЫЖОК</small></button>
+        <button class="padbtn" type="button" data-btn="D" aria-label="Присесть">▼<small>СЕСТЬ</small></button>
+      </div>
+      <div class="padside">
+        <button class="padbtn" type="button" data-btn="B" aria-label="Кувырок">X<small>КУВЫРОК</small></button>
+        <button class="padbtn" type="button" data-btn="A" aria-label="Действие">Z<small>БРАТЬ</small></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="keys">
+    <span><kbd>←</kbd><kbd>→</kbd> ходить</span>
+    <span><kbd>Z</kbd> / <kbd>пробел</kbd> брать, действие, дальше</span>
+    <span><kbd>X</kbd> кувырок</span>
+    <span><kbd>↑</kbd> прыжок</span>
+    <span><kbd>↓</kbd> присесть</span>
+    <span><kbd>R</kbd> / <kbd>Esc</kbd> глава заново</span>
+    <span><kbd>F</kbd> во весь экран</span>
+  </div>
+
+  <div class="cards">
+    <div class="who">
+      <h2>Ромомэо</h2>
+      <p>Главный в походе. Собрал нормальный рюкзак: нож, спички, котелок, карта.
+        Умеет ставить палатку и варить суп из раков.</p>
+    </div>
+    <div class="who b">
+      <h2>Омешкин</h2>
+      <p>Взял годовой запас вкусняшек и подушку. Матрас не влез. Первым находит спирт,
+        который просили не поднимать.</p>
+    </div>
+    <div class="who c">
+      <h2>Пельмешкин</h2>
+      <p>Вообще-то его зовут <b>Бока</b>. Взял побольше пельменей и соус, про одеяло забыл.
+        Ночью находит котёнка.</p>
+    </div>
+  </div>
+
+  <footer>
+    <span class="hand">«после этого герои больше никогда в жизни не могли сидеть на попе»</span>
+    Игра по рассказу «Приключения Омешкина, Ромомэо и Пельмешкина в лесу».
+    Горилан в шестой главе — это привет из первой игры:
+    <a href="https://hammadismailov2015-wq.github.io/GorelanendRoma/">Горелан и Рома</a>.
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* ---------- экран ---------- */
+var W=480,H=270;
+var cv=document.getElementById('screen'), ctx=cv.getContext('2d');
+var chapterEl=document.getElementById('chapter');
+var cabEl=document.querySelector('.cab'), swrapEl=document.getElementById('screenwrap');
+var fsBtn=document.getElementById('fs'), immersive=false;
+function fitCanvas(){
+  var r=cv.getBoundingClientRect(); if(!r.width) return;
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  var bw=Math.max(480,Math.min(1600,Math.round(r.width*dpr)));
+  if(cv.width!==bw){ cv.width=bw; cv.height=Math.round(bw*H/W); }
+}
+window.addEventListener('resize',function(){ layoutBig(); fitCanvas(); });
+window.addEventListener('orientationchange',function(){ setTimeout(function(){ layoutBig(); fitCanvas(); },200); });
+
+/* ---------- на весь экран ---------- */
+function layoutBig(){
+  if(!immersive){ cv.style.width=''; cv.style.height=''; return; }
+  var aw=swrapEl.clientWidth, ah=swrapEl.clientHeight;
+  if(!aw||!ah) return;
+  var sc=Math.min(aw/W,ah/H);
+  cv.style.width=Math.floor(W*sc)+'px';
+  cv.style.height=Math.floor(H*sc)+'px';
+}
+function setBig(on){
+  immersive=on;
+  cabEl.classList.toggle('immersive',on);
+  document.body.classList.toggle('immersive-on',on);
+  fsBtn.textContent=on?'Свернуть':'На весь экран';
+  fsBtn.setAttribute('aria-pressed',on?'true':'false');
+  layoutBig(); fitCanvas();
+  setTimeout(function(){ layoutBig(); fitCanvas(); },140);
+}
+function enterBig(){
+  setBig(true);
+  var req=cabEl.requestFullscreen||cabEl.webkitRequestFullscreen;
+  if(req){ try{ var pr=req.call(cabEl); if(pr&&pr.catch) pr.catch(function(){}); }catch(e){} }
+  try{ if(screen.orientation&&screen.orientation.lock){
+    var lk=screen.orientation.lock('landscape'); if(lk&&lk.catch) lk.catch(function(){}); } }catch(e){}
+}
+function exitBig(){
+  setBig(false);
+  try{
+    var ex=document.exitFullscreen||document.webkitExitFullscreen;
+    if(ex&&(document.fullscreenElement||document.webkitFullscreenElement)) ex.call(document);
+  }catch(e){}
+  try{ if(screen.orientation&&screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
+}
+function toggleBig(){ if(immersive) exitBig(); else enterBig(); }
+fsBtn.addEventListener('click',toggleBig);
+document.addEventListener('fullscreenchange',function(){
+  if(!document.fullscreenElement && immersive) setBig(false);
+});
+document.addEventListener('webkitfullscreenchange',function(){
+  if(!document.webkitFullscreenElement && immersive) setBig(false);
+});
+
+/* ---------- ввод ---------- */
+var down={}, hit={};
+var MAP={ArrowLeft:'L',KeyA:'L',ArrowRight:'R',KeyD:'R',ArrowUp:'U',KeyW:'U',ArrowDown:'D',KeyS:'D',
+  Space:'A',KeyZ:'A',Enter:'A',NumpadEnter:'A',KeyX:'B',ShiftLeft:'B',ShiftRight:'B',
+  Escape:'P',KeyR:'P'};
+function vpress(v){ if(!down[v]) hit[v]=true; down[v]=true; }
+function vrelease(v){ down[v]=false; }
+window.addEventListener('keydown',function(e){
+  if(e.code==='KeyF'){ e.preventDefault(); toggleBig(); return; }
+  // Esc в полноэкранном режиме сворачивает окно — главу тогда не перезапускаем
+  if(e.code==='Escape' && (immersive||document.fullscreenElement)) return;
+  var v=MAP[e.code]; if(!v) return;
+  if(!e.repeat) vpress(v); else down[v]=true;
+  if(v!=='P') e.preventDefault();
+});
+window.addEventListener('keyup',function(e){ var v=MAP[e.code]; if(v) vrelease(v); });
+window.addEventListener('blur',function(){ down={}; });
+(function(){
+  var pad=document.getElementById('pad');
+  Array.prototype.forEach.call(pad.querySelectorAll('[data-btn]'),function(b){
+    var v=b.getAttribute('data-btn');
+    b.addEventListener('pointerdown',function(e){e.preventDefault(); b.setPointerCapture(e.pointerId); audioOn(); vpress(v);});
+    ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
+      b.addEventListener(ev,function(e){e.preventDefault(); vrelease(v);});
+    });
+  });
+})();
+function isDown(v){return !!down[v]}
+function press(v){return !!hit[v]}
+
+/* ---------- звук ---------- */
+var AC=null, muted=false;
+function audioOn(){
+  if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(AC&&AC.state==='suspended') AC.resume();
+  if(AC&&MUS.song&&!MUS.timer){ MUS.next=AC.currentTime+0.06; MUS.timer=setInterval(musTick,25); }
+}
+window.addEventListener('keydown',audioOn,{once:true});
+cv.addEventListener('pointerdown',audioOn);
+var muteBtn=document.getElementById('mute');
+muteBtn.addEventListener('click',function(){
+  muted=!muted; muteBtn.textContent=muted?'Звук и музыка выкл':'Звук и музыка вкл';
+  muteBtn.setAttribute('aria-pressed',muted?'true':'false');
+});
+function tone(freq,dur,type,vol,slide){
+  if(muted||!AC) return;
+  try{
+    var o=AC.createOscillator(), g=AC.createGain(), t=AC.currentTime;
+    o.type=type||'square'; o.frequency.setValueAtTime(freq,t);
+    if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(40,slide),t+dur);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol||0.06,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+dur+0.02);
+  }catch(e){}
+}
+function noise(dur,vol){
+  if(muted||!AC) return;
+  try{
+    var n=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0);
+    for(var i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    var s=AC.createBufferSource(), g=AC.createGain();
+    s.buffer=b; g.gain.value=vol||0.08; s.connect(g); g.connect(AC.destination); s.start();
+  }catch(e){}
+}
+function sfx(k){
+  switch(k){
+    case 'talk': tone(420,0.04,'square',0.025); break;
+    case 'hit': noise(0.09,0.22); tone(180,0.09,'square',0.13,90); break;
+    case 'heavy': noise(0.18,0.32); tone(90,0.22,'sawtooth',0.18,45); break;
+    case 'hurt': tone(300,0.22,'sawtooth',0.17,80); break;
+    case 'pick': tone(660,0.08,'triangle',0.06); tone(990,0.1,'triangle',0.05); break;
+    case 'step': tone(120,0.03,'square',0.02); break;
+    case 'win': [523,659,784,1046].forEach(function(f,i){setTimeout(function(){tone(f,0.16,'triangle',0.06)},i*100)}); break;
+    case 'lose': [392,330,262].forEach(function(f,i){setTimeout(function(){tone(f,0.22,'sawtooth',0.05)},i*130)}); break;
+    case 'boom': noise(0.5,0.38); tone(70,0.5,'sawtooth',0.22,30); break;
+    case 'drink': tone(500,0.07,'sine',0.05,900); break;
+    case 'car': tone(70,0.3,'sawtooth',0.03,60); break;
+    case 'alarm': tone(880,0.15,'square',0.05,440); break;
+    case 'jump': tone(420,0.09,'square',0.045,780); break;
+    case 'roll': noise(0.12,0.05); break;
+  }
+}
+
+/* ---------- примитивы ---------- */
+function R(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); }
+function C(x,y,r,c){ ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,r,0,6.2832); ctx.fill(); }
+function EL(x,y,rx,ry,c){ ctx.fillStyle=c; ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,6.2832); ctx.fill(); }
+var FD='"Russo One","Arial Black",sans-serif', FB='"Rubik",system-ui,sans-serif', FH='"Caveat",cursive';
+function T(s,x,y,o){
+  o=o||{};
+  ctx.font=(o.weight?o.weight+' ':'')+(o.size||10)+'px '+(o.font||FB);
+  ctx.textAlign=o.align||'left'; ctx.textBaseline=o.base||'alphabetic';
+  if(o.shadow!==false){ ctx.fillStyle=o.shadowColor||'rgba(0,0,0,.6)'; ctx.fillText(s,x+1,y+1); }
+  ctx.fillStyle=o.color||'#F6ECD8'; ctx.fillText(s,x,y);
+}
+function measure(s,size,font,weight){ ctx.font=(weight?weight+' ':'')+size+'px '+(font||FB); return ctx.measureText(s).width; }
+function wrap(s,maxW,size,font){
+  ctx.font=size+'px '+(font||FB);
+  var words=s.split(' '), lines=[], cur='';
+  for(var i=0;i<words.length;i++){
+    var t=cur?cur+' '+words[i]:words[i];
+    if(ctx.measureText(t).width>maxW && cur){ lines.push(cur); cur=words[i]; } else cur=t;
+  }
+  if(cur) lines.push(cur);
+  return lines;
+}
+function shake(n){ if(n>0){ ctx.translate((Math.random()-0.5)*n,(Math.random()-0.5)*n); } }
+
+/* ---------- персонажи ---------- */
+/* герои второй тетради */
+var ROMO={skin:'#EFC6A2',dark:'#D0A07C',hair:'#4A3526',shirt:'#3F7A54',shirtD:'#2F5E40',
+  pants:'#3A4A5E',pantsD:'#2C3A4A',shoe:'#E4DCC8',eye:'#FFF8E6'};
+var OME={skin:'#F3CDA8',dark:'#D4A882',hair:'#C98A3A',shirt:'#D9772E',shirtD:'#AE5C22',
+  pants:'#4F4A66',pantsD:'#3C3850',shoe:'#E4DCC8',eye:'#FFF8E6'};
+var PEL={skin:'#F6D2B0',dark:'#D8AC8A',hair:'#7A5230',shirt:'#C6453A',shirtD:'#9C332B',
+  pants:'#5A5548',pantsD:'#454136',shoe:'#E4DCC8',eye:'#FFF8E6'};
+var AMI={skin:'#EFC6A2',dark:'#D0A07C',hair:'#2A1E18',shirt:'#8F5FA8',shirtD:'#6E4784',
+  pants:'#3A4A5E',pantsD:'#2C3A4A',shoe:'#E4DCC8',eye:'#FFF8E6'};
+/* палитра Горилана нужна для отсылки в шестой главе */
+var GOR={skin:'#7B4B2F',dark:'#5C3721',hair:'#221510',shirt:'#D8452F',shirtD:'#A33623',
+  pants:'#2E4F7C',pantsD:'#223C5F',shoe:'#EDE6D8',eye:'#FFF6E4'};
+var ROM=ROMO;
+
+/* Горелан крупнее Ромы на пару пикселей в плечах — спортивный, но обычный пацан 11 лет */
+function kid(x,y,o){
+  o=o||{}; var p=o.pal||ROM, f=o.face||1, t=o.t||0, pose=o.pose||'idle', big=o.big?1:0;
+  ctx.save(); ctx.translate(Math.round(x),Math.round(y));
+  if(f<0) ctx.scale(-1,1);
+  if(pose==='roll'){
+    ctx.translate(0,-11); ctx.rotate((o.t||0)*14*(f<0?-1:1));
+    C(0,0,10,p.shirt); C(0,0,10-3,p.shirtD); C(3,-2,4,p.skin); R(-9,-1,18,2,p.pantsD);
+    ctx.restore(); return;
+  }
+  if(pose==='lie'){ ctx.rotate(-1.5708); ctx.translate(-4,-2); pose='idle'; }
+  var bob=(pose==='walk')?Math.round(Math.sin(t*11)*1):0;
+  var sw=(pose==='walk')?Math.sin(t*11):0;
+  var crouch=(pose==='scared')?6:0;
+  var sx=(pose==='scared')?Math.round(Math.sin(t*40)*1):0;
+  ctx.translate(sx,crouch);
+  // ноги
+  var lo=Math.round(sw*3);
+  R(-5+lo,-9,4,9,p.pants); R(1-lo,-9,4,9,p.pantsD);
+  R(-5+lo,-1,5,2,p.shoe); R(1-lo,-1,5,2,p.shoe);
+  // туловище
+  var ty=-21+bob, tw=10+big*2;
+  R(-tw/2,ty,tw,12,p.shirt);
+  if(o.belly){ EL(0,ty+9,tw/2+3,6,p.shirt); EL(1,ty+9,tw/2,4,p.shirtD); }
+  R(-tw/2,ty,tw,3,p.shirtD);
+  R(f>0?tw/2-3:-tw/2,ty+4,3,8,p.shirtD);
+  // руки
+  var arm=p.skin, ay=ty+3;
+  if(pose==='attack'){
+    var pr=Math.min(1,(o.atk||0)*3.2);
+    R(-2,ay-3+bob,4+Math.round(pr*11),4,arm);      // передняя рука вперёд
+    R(-tw/2-3,ay+2,3,9,arm);
+  } else if(pose==='scared'){
+    R(-tw/2-3,ty-4,3,7,arm); R(tw/2,ty-4,3,7,arm);
+  } else {
+    R(-tw/2-3,ay-Math.round(sw*2),3,10,arm);
+    R(tw/2,ay+Math.round(sw*2),3,10,arm);
+  }
+  // голова
+  var hy=ty-11;
+  R(-5,hy,11,11,p.skin); R(-5,hy+8,11,3,p.dark);
+  if(o.hairStyle==='curls'){
+    R(-6,hy-4,13,5,p.hair);
+    R(-7,hy-1,2,4,p.hair); R(6,hy-1,2,4,p.hair);
+    R(-4,hy-6,3,3,p.hair); R(0,hy-7,4,3,p.hair); R(4,hy-6,3,3,p.hair);
+  } else {
+    R(-6,hy-3,13,5,p.hair); R(-6,hy+1,3,3,p.hair);
+    R(f>0?3:-6,hy-4,4,3,p.hair);
+  }
+  // лицо
+  var ex=f>0?1:-3;
+  if(pose==='scared'){ R(ex,hy+3,3,3,p.eye); R(ex+1,hy+4,1,1,'#2A1A12'); R(ex-4,hy+3,3,3,p.eye); R(ex-3,hy+4,1,1,'#2A1A12'); R(ex-2,hy+8,4,2,'#2A1410'); }
+  else { R(ex,hy+4,2,2,p.eye); R(ex+1,hy+4,1,2,'#2A1A12'); R(ex-4,hy+4,2,2,p.eye); R(ex-3,hy+4,1,2,'#2A1A12'); R(ex-2,hy+8,3,1,p.dark); }
+  // оружие
+  if(o.weapon==='hammer'){
+    var hx=f>0?6:-6, sp=pose==='attack'?Math.min(1,(o.atk||0)*3.2):0;
+    ctx.save(); ctx.translate(hx,ty+2); ctx.rotate((sp?1.5:-0.5));
+    R(-1,-2,3,18,'#8A5C33'); R(-6,14,13,9,'#6D7076'); R(-6,14,13,3,'#8E9298');
+    ctx.restore();
+  } else if(o.weapon==='sword'){
+    var sx2=f>0?5:-5, ang=pose==='attack'?Math.min(1,(o.atk||0)*3.2)*1.7-0.9:-0.9;
+    ctx.save(); ctx.translate(sx2,ty+5); ctx.scale(f>0?1:-1,1); ctx.rotate(ang);
+    R(0,-1,3,7,'#7A4B2A'); R(-2,-2,7,2,'#C8A24A'); R(0,-22,3,20,'#D9DEE6'); R(1,-22,1,20,'#F4F7FB');
+    ctx.restore();
+  }
+  ctx.restore();
+}
+/* прыжок и кувырок доступны во всех главах, где есть управление,
+   без перезарядки и без ограничения на число прыжков в воздухе */
+function gravity(o,dt){
+  o.vy+=580*dt; o.y+=o.vy*dt;
+  if(o.y<-72){ o.y=-72; if(o.vy<0) o.vy=0; }   // выше потолка не улететь
+  if(o.y>=0){ o.y=0; o.vy=0; }
+}
+function jumpNow(o){ o.vy=-170; sfx('jump'); }
+function rollNow(o){ o.roll=0.42; sfx('roll'); }
+
+/* ---------- голоса зверей и людей ---------- */
+/* всё через компрессор: можно делать громко и не получить хрип и щелчки */
+var SFXBUS=null;
+function sfxBus(){
+  if(!AC) return null;
+  if(!SFXBUS){
+    var c=AC.createDynamicsCompressor();
+    try{ c.threshold.value=-5; c.knee.value=9; c.ratio.value=5;
+         c.attack.value=0.004; c.release.value=0.26; }catch(e){}
+    var out=AC.createGain(); out.gain.value=0.82;
+    c.connect(out); out.connect(AC.destination); SFXBUS=c;
+  }
+  return SFXBUS;
+}
+function distCurve(k){
+  var n=1024, c=new Float32Array(n), i, x;
+  for(i=0;i<n;i++){ x=i*2/n-1; c[i]=(1+k)*x/(1+k*Math.abs(x)); }
+  return c;
+}
+function noiseBand(t,dur,vol,freq,q){
+  var bus=sfxBus(); if(!bus) return;
+  try{
+    var n=Math.max(1,Math.floor(AC.sampleRate*dur)), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0);
+    for(var i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    var src=AC.createBufferSource(), g=AC.createGain(), f=AC.createBiquadFilter();
+    src.buffer=b; f.type='bandpass'; f.frequency.value=freq; f.Q.value=q||4; g.gain.value=vol;
+    src.connect(f); f.connect(g); g.connect(AC.destination); src.start(t);
+  }catch(e){}
+}
+/* ---------- живой голос: связки, а не пила через фильтр ----------
+   Голос рисуется сэмпл за сэмплом: череда глоттальных импульсов, у которых
+   период и громкость каждый раз чуть другие. Эта неровность и отличает живой
+   рёв от блеяния — у козы и у моторчика модуляция ровная. */
+function screamPitch(pts,u){
+  var i;
+  if(u<=pts[0][0]) return pts[0][1];
+  for(i=1;i<pts.length;i++){
+    if(u<=pts[i][0]){
+      var a=pts[i-1], b=pts[i], k=(u-a[0])/Math.max(0.0001,b[0]-a[0]);
+      return a[1]+(b[1]-a[1])*k;
+    }
+  }
+  return pts[pts.length-1][1];
+}
+function glottalBuf(dur,pts,jit,shim,noiseMix,sub){
+  var sr=AC.sampleRate, n=Math.max(16,Math.floor(sr*dur));
+  var buf=AC.createBuffer(1,n,sr), d=buf.getChannelData(0);
+  var i=0, flip=1;
+  while(i<n){
+    var u=i/n, f=screamPitch(pts,u);
+    if(sub){ flip=-flip; if(flip<0) f*=0.5; }          // срыв на пол-октавы: хрип зверя
+    var per=Math.max(6,Math.round(sr/f*(1+(Math.random()*2-1)*jit)));
+    var amp=1+(Math.random()*2-1)*shim;
+    for(var k=0;k<per && i<n;k++,i++){
+      var x=k/per, g;
+      if(x<0.55) g=0.5*(1-Math.cos(Math.PI*x/0.55));   // связки открываются
+      else if(x<0.8) g=Math.cos(Math.PI*(x-0.55)/0.5); // и резко смыкаются
+      else g=0;
+      d[i]=g*amp;
+    }
+  }
+  if(noiseMix>0) for(i=0;i<n;i++) d[i]=d[i]*(1-noiseMix)+(Math.random()*2-1)*noiseMix;
+  var prev=0, cur;                                      // губы дифференцируют поток
+  for(i=0;i<n;i++){ cur=d[i]; d[i]=cur-prev*0.97; prev=cur; }
+  return buf;
+}
+var VGAIN=7.5;                 // общий множитель громкости живого голоса
+function playVoice(o){
+  if(muted||!AC) return;
+  var bus=sfxBus(); if(!bus) return;
+  try{
+    var t=AC.currentTime+(o.when||0), i;
+    var src=AC.createBufferSource();
+    src.buffer=glottalBuf(o.dur,o.pts,o.jit,o.shim,o.noise,o.sub);
+    var sh=AC.createWaveShaper(); sh.curve=distCurve(o.drive||10); sh.oversample='2x';
+    var mix=AC.createGain(), g=AC.createGain();
+    for(i=0;i<o.formants.length;i++){
+      var F=o.formants[i];
+      var bq=AC.createBiquadFilter(); bq.type='bandpass'; bq.frequency.value=F[0]; bq.Q.value=F[1];
+      var bg=AC.createGain(); bg.gain.value=F[2]==null?1:F[2];
+      sh.connect(bq); bq.connect(bg); bg.connect(mix);
+    }
+    var dir=AC.createGain(); dir.gain.value=o.direct==null?0.3:o.direct;
+    sh.connect(dir); dir.connect(mix);
+    var lp=AC.createBiquadFilter(); lp.type='lowpass';
+    lp.frequency.setValueAtTime(o.lp0||3000,t);
+    lp.frequency.exponentialRampToValueAtTime(o.lp1||900,t+o.dur);
+    var at=o.attack||0.05, rel=o.release||0.12, vv=o.vol*VGAIN;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vv,t+at);
+    g.gain.setValueAtTime(vv,t+Math.max(at+0.02,o.dur*0.7));
+    g.gain.exponentialRampToValueAtTime(0.0001,t+o.dur+rel);
+    if(o.flutter){                      // дрожь увулы — она у горловых звуков настоящая
+      var fl=AC.createOscillator(), flg=AC.createGain();
+      fl.type='sine'; fl.frequency.value=o.flutter; flg.gain.value=vv*0.5;
+      fl.connect(flg); flg.connect(g.gain); fl.start(t); fl.stop(t+o.dur+rel);
+    }
+    src.connect(sh); mix.connect(lp); lp.connect(g); g.connect(bus);
+    src.start(t);
+  }catch(e){}
+}
+function lionPulse(t,f,dur,vol,bus,dist){
+  try{
+    var o=AC.createOscillator(), sub=AC.createOscillator();
+    var sh=AC.createWaveShaper(), lp=AC.createBiquadFilter(), g=AC.createGain(), sg=AC.createGain();
+    sh.curve=distCurve(dist||46); sh.oversample='2x';
+    o.type='sawtooth'; sub.type='square';
+    o.frequency.setValueAtTime(f,t); o.frequency.linearRampToValueAtTime(f*0.82,t+dur);
+    sub.frequency.setValueAtTime(f*0.5,t); sub.frequency.linearRampToValueAtTime(f*0.41,t+dur);
+    lp.type='lowpass'; lp.frequency.setValueAtTime(1500,t);
+    lp.frequency.exponentialRampToValueAtTime(420,t+dur);
+    sg.gain.value=0.7;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(sh); sub.connect(sg); sg.connect(sh);
+    sh.connect(lp); lp.connect(g); g.connect(bus);
+    o.start(t); sub.start(t); o.stop(t+dur+0.05); sub.stop(t+dur+0.05);
+  }catch(e){}
+}
+/* ---------- три варианта голоса льва ---------- */
+function lionSound(kind,v){
+  var die=kind==='die', hurt=kind==='hurt', intro=kind==='intro';
+  var dur=die?1.9:hurt?0.45:intro?1.35:0.9, t=AC.currentTime;
+  if(v===1){                                   // «раскат»: ниже, длиннее, злее
+    playVoice({dur:dur,jit:0.09,shim:0.3,noise:0.42,sub:true,drive:64,
+      vol:die?0.5:hurt?0.34:0.44, attack:0.13,
+      pts:die?[[0,74],[0.1,92],[0.5,74],[1,32]]:hurt?[[0,96],[0.1,124],[1,60]]
+             :[[0,70],[0.1,90],[0.55,80],[1,36]],
+      formants:[[300,2.6,1],[750,1.8,0.8],[1600,1.2,0.45]], direct:0.4, lp0:2400, lp1:300});
+  } else if(v===2){                            // «рычание шумом»: почти без тона
+    noiseBand(t,0.16,0.5,900,0.7);
+    noiseBand(t+0.02,dur,0.55,260,0.6);
+    noiseBand(t+0.04,dur*0.9,0.4,620,0.8);
+    noiseBand(t+0.08,dur*0.8,0.22,1800,1.0);
+    playVoice({dur:dur,jit:0.1,shim:0.35,noise:0.6,sub:true,drive:50,
+      vol:die?0.3:0.24, attack:0.12,
+      pts:die?[[0,66],[0.1,84],[1,30]]:[[0,64],[0.1,82],[1,34]],
+      formants:[[280,2.2,1],[700,1.6,0.7]], direct:0.5, lp0:1800, lp1:260});
+  } else {                                     // 0 — «глотка»
+    playVoice({dur:dur,jit:0.06,shim:0.22,noise:0.3,sub:true,drive:42,
+      vol:die?0.48:hurt?0.32:0.42, attack:0.09,
+      pts:die?[[0,95],[0.1,118],[0.45,98],[1,40]]:hurt?[[0,120],[0.1,152],[1,74]]
+             :[[0,88],[0.1,114],[0.5,100],[1,44]],
+      formants:[[380,3,1],[900,2,0.75],[2000,1.4,0.4]], direct:0.35, lp0:2600, lp1:340});
+  }
+  if(die){
+    var bus=sfxBus();
+    if(bus){ lionPulse(t+dur+0.12,70,0.22,0.36,bus,60);
+             lionPulse(t+dur+0.42,60,0.24,0.26,bus,60); }
+    noiseBand(t+dur+0.05,0.5,0.14,240,1.0);
+  }
+}
+/* ---------- три варианта крика ---------- */
+function manSound(kind,v){
+  var die=kind==='die', hurt=kind==='hurt';
+  var dur=die?1.5:hurt?0.42:0.55;
+  if(v===1){                                   // «панический»: высокий, испуганный
+    playVoice({dur:dur,jit:0.03,shim:0.2,noise:0.35,drive:14,
+      vol:die?0.34:hurt?0.32:0.36, attack:0.04,
+      pts:die?[[0,330],[0.1,420],[0.5,360],[1,110]]:hurt?[[0,330],[0.1,400],[1,250]]
+             :[[0,300],[0.12,390],[0.7,360],[1,260]],
+      formants:[[800,2,1],[1400,1.6,0.8],[3000,1.2,0.5]], direct:0.3, lp0:4200, lp1:1200});
+  } else if(v===2){                            // «хрип»: почти сорванный голос
+    playVoice({dur:dur,jit:0.045,shim:0.3,noise:0.6,drive:22,
+      vol:die?0.36:hurt?0.34:0.38, attack:0.03,
+      pts:die?[[0,190],[0.1,225],[0.5,180],[1,62]]:hurt?[[0,185],[0.1,215],[1,150]]
+             :[[0,170],[0.12,205],[0.7,190],[1,150]],
+      formants:[[650,1.8,1],[1150,1.5,0.8],[2600,1.1,0.5]], direct:0.4, lp0:3600, lp1:900});
+  } else {                                     // 0 — «мужик орёт»
+    playVoice({dur:dur,jit:0.022,shim:0.18,noise:0.26,drive:11,
+      vol:die?0.34:hurt?0.32:0.36, attack:0.045,
+      pts:die?[[0,210],[0.1,250],[0.45,225],[0.6,180],[0.72,215],[1,72]]
+             :hurt?[[0,200],[0.1,245],[1,170]]
+             :[[0,190],[0.12,235],[0.7,220],[1,175]],
+      formants:[[700,2,1],[1150,1.7,0.85],[2600,1.2,0.5]], direct:0.32, lp0:3800, lp1:1000});
+  }
+  if(die) noiseBand(AC.currentTime+dur,0.45,0.27,140,0.9);
+}
+/* ОХРАНА. Короткие возгласы. «Га?» — высота идёт вверх, от этого и
+   получается вопрос; «Эй!» — вниз, это уже окрик. */
+function ghaynHuh(k){
+  /* «غَ؟» — арабский гайн: звонкое трение у самой увулы, потом открытое «а».
+     Вопрос получается из подъёма высоты на гласной. */
+  playVoice({when:0, dur:0.13, jit:0.03, shim:0.25, noise:0.5, drive:16, vol:0.24, attack:0.012,
+    pts:[[0,118*k],[1,134*k]],
+    formants:[[1250,1.5,1],[720,2.2,0.55],[2100,1.4,0.3]], direct:0.12,
+    lp0:2600, lp1:1900, flutter:27});
+  noiseBand(AC.currentTime+0.012,0.12,0.30,1500,1.5);      // само трение в горле
+  noiseBand(AC.currentTime+0.012,0.12,0.16,900,1.2);
+  playVoice({when:0.09, dur:0.28, jit:0.025, shim:0.18, noise:0.22, drive:12, vol:0.34, attack:0.035,
+    pts:[[0,134*k],[0.25,154*k],[1,212*k]],
+    formants:[[700*k,2,1],[1150*k,1.7,0.8],[2500,1.2,0.45]], direct:0.3, lp0:3400, lp1:1400});
+}
+function guardVoice(kind){
+  if(muted||!AC) return;
+  var low=VOICE.guard===2, k=low?0.72:1;
+  if(kind==='hey')
+    playVoice({dur:0.45,jit:0.03,shim:0.22,noise:0.3,drive:16,vol:0.38,attack:0.025,
+      pts:[[0,180*k],[0.12,238*k],[1,138*k]],
+      formants:[[620*k,2,1],[1500*k,1.6,0.7],[2600,1.2,0.5]],direct:0.32,lp0:3800,lp1:1100});
+  else if(kind==='what')
+    playVoice({dur:0.26,jit:0.03,shim:0.2,noise:0.32,drive:12,vol:0.28,attack:0.03,
+      pts:[[0,120*k],[0.3,138*k],[1,180*k]],
+      formants:[[660*k,2,1],[1200*k,1.7,0.75],[2400,1.2,0.4]],direct:0.3,lp0:3200,lp1:1200});
+  else if(kind==='hm')
+    playVoice({dur:0.22,jit:0.02,shim:0.15,noise:0.25,drive:10,vol:0.22,attack:0.03,
+      pts:[[0,120*k],[1,102*k]],
+      formants:[[500*k,2.2,1],[1100*k,1.8,0.6]],direct:0.3,lp0:2400,lp1:900});
+  else if(VOICE.guard===1)                    // 'huh' обычным «г»
+    playVoice({dur:0.30,jit:0.025,shim:0.18,noise:0.3,drive:12,vol:0.32,attack:0.03,
+      pts:[[0,132*k],[0.25,150*k],[1,208*k]],
+      formants:[[700*k,2,1],[1150*k,1.7,0.8],[2500,1.2,0.45]],direct:0.3,lp0:3400,lp1:1400});
+  else ghaynHuh(k);                           // 'huh' — горловое «غَ؟»
+}
+var VOICE={lion:0,man:0,ant:0,guard:0};
+try{ var vsRaw=localStorage.getItem('omir_voices');
+     if(vsRaw){ var vsp=JSON.parse(vsRaw);
+       if(vsp&&typeof vsp==='object'){ if(vsp.guard==null) vsp.guard=0; VOICE=vsp; } } }catch(e){}
+function saveVoices(){ try{ localStorage.setItem('omir_voices',JSON.stringify(VOICE)); }catch(e){} }
+function roar(kind){ if(muted||!AC) return; lionSound(kind||'charge',VOICE.lion); }
+function scream(kind){ if(muted||!AC) return; manSound(kind||'shout',VOICE.man); }
+
+/* МУРАВЕЙ. Стридуляция: сухой скрип брюшком плюс жужжащий призвук.
+   Смертный — длинная очередь скрипов, которая замедляется и глохнет. */
+/* один скрип: быстрый «зип» вниз по частоте — так скребок и звучит */
+function antScrape(t,dur,vol,f0,f1){
+  var bus=sfxBus(); if(!bus) return;
+  try{
+    var o=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter(), sh=AC.createWaveShaper();
+    sh.curve=distCurve(22); o.type='sawtooth';
+    o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    f.type='bandpass'; f.frequency.value=2900; f.Q.value=1.5;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(sh); sh.connect(f); f.connect(g); g.connect(AC.destination);
+    o.start(t); o.stop(t+dur+0.03);
+  }catch(e){}
+}
+function antBuzz(t,dur,vol,f0,f1){
+  var bus=sfxBus(); if(!bus) return;
+  try{
+    var o=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter(),
+        lfo=AC.createOscillator(), lg=AC.createGain();
+    o.type='sawtooth'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    f.type='bandpass'; f.frequency.value=2200; f.Q.value=1.3;
+    lfo.type='square'; lfo.frequency.value=62; lg.gain.value=vol*0.5;
+    lfo.connect(lg); lg.connect(g.gain);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(f); f.connect(g); g.connect(bus);
+    o.start(t); lfo.start(t); o.stop(t+dur+0.05); lfo.stop(t+dur+0.05);
+  }catch(e){}
+}
+function antVoice(kind){
+  if(VOICE.ant===1){ antVoiceBig(kind); return; }
+  if(muted||!AC) return;
+  var t=AC.currentTime, i, n, gap;
+  if(kind==='die'){
+    n=18; var at=0;
+    for(i=0;i<n;i++){
+      gap=0.05+i*0.014;                                         // скрипы замедляются и глохнут
+      antScrape(t+at,0.05,0.6-i*0.026,4200-i*140,1100-i*30);
+      noiseBand(t+at,0.06,0.42-i*0.018,2600-i*70,2.2);
+      at+=gap;
+    }
+    antBuzz(t,1.3,0.5,260,55);
+    noiseBand(t+1.3,0.3,0.34,800,1.8);
+    return;
+  }
+  if(kind==='hurt'){
+    for(i=0;i<7;i++){ antScrape(t+i*0.045,0.045,0.8,4600,1400); noiseBand(t+i*0.045,0.05,0.55,3000,2.2); }
+    antBuzz(t,0.36,0.42,340,190);
+    return;
+  }
+  for(i=0;i<6;i++){ antScrape(t+i*0.055,0.05,0.7,3900,1200);        // призыв-угроза
+                    noiseBand(t+i*0.055,0.05,0.45,2500+(i%2)*900,2.2); }
+  antBuzz(t,0.32,0.34,240,210);
+  if(kind==='click'){ noiseBand(t,0.03,0.7,5000,2); noiseBand(t+0.07,0.03,0.6,4200,2); }
+}
+function antVoiceBig(kind){                 // вариант «крупный муравей»: ниже и злее
+  if(muted||!AC) return;
+  var t=AC.currentTime,i,n,gap,at=0;
+  if(kind==='die'){
+    n=16;
+    for(i=0;i<n;i++){ gap=0.06+i*0.016;
+      antScrape(t+at,0.07,0.8-i*0.035,2600-i*90,700-i*20);
+      noiseBand(t+at,0.08,0.5-i*0.02,1500-i*40,1.8); at+=gap; }
+    antBuzz(t,1.4,0.55,170,40); noiseBand(t+1.4,0.3,0.34,600,1.5); return;
+  }
+  if(kind==='hurt'){
+    for(i=0;i<6;i++){ antScrape(t+i*0.055,0.06,0.85,2900,800); noiseBand(t+i*0.055,0.07,0.55,1700,1.8); }
+    antBuzz(t,0.42,0.5,220,120); return;
+  }
+  for(i=0;i<5;i++){ antScrape(t+i*0.07,0.06,0.8,2500,750); noiseBand(t+i*0.07,0.07,0.5,1500,1.8); }
+  antBuzz(t,0.4,0.42,180,140);
+  if(kind==='click'){ noiseBand(t,0.035,0.75,3800,1.8); noiseBand(t+0.08,0.035,0.62,3200,1.8); }
+}
+
+function voiceOf(kind,what){
+  if(kind==='lion') roar(what);
+  else if(kind==='ant') antVoice(what);
+  else if(kind==='fat') scream(what);
+}
+
+/* ---------- музыка ---------- */
+/* маленький чиптюн-секвенсор: у каждой главы своя тема, всё считается
+   прямо в браузере, никаких файлов грузить не надо */
+var MUS={name:null,song:null,step:0,next:0,timer:null,bus:null};
+function musBus(){
+  if(!AC) return null;
+  if(!MUS.bus){ MUS.bus=AC.createGain(); MUS.bus.gain.value=0.5; MUS.bus.connect(AC.destination); }
+  return MUS.bus;
+}
+function mfreq(m){ return 440*Math.pow(2,(m-69)/12); }
+function mnote(m,t,dur,type,vol){
+  var bus=musBus(); if(!bus) return;
+  try{
+    var o=AC.createOscillator(), g=AC.createGain();
+    o.type=type; o.frequency.setValueAtTime(mfreq(m),t);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.014);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(bus); o.start(t); o.stop(t+dur+0.04);
+  }catch(e){}
+}
+function mnoise(t,dur,vol,hp){
+  var bus=musBus(); if(!bus) return;
+  try{
+    var n=Math.max(1,Math.floor(AC.sampleRate*dur)), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0);
+    for(var i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    var src=AC.createBufferSource(), g=AC.createGain(), f=AC.createBiquadFilter();
+    src.buffer=b; f.type='highpass'; f.frequency.value=hp||2600; g.gain.value=vol;
+    src.connect(f); f.connect(g); g.connect(bus); src.start(t);
+  }catch(e){}
+}
+function mkick(t){
+  var bus=musBus(); if(!bus) return;
+  try{
+    var o=AC.createOscillator(), g=AC.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(145,t); o.frequency.exponentialRampToValueAtTime(46,t+0.11);
+    g.gain.setValueAtTime(0.14,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.17);
+    o.connect(g); g.connect(bus); o.start(t); o.stop(t+0.22);
+  }catch(e){}
+}
+/* аккомпанемент строится из аккордов: [основа, 'm' или 'M'] */
+function bassOf(ch,per){
+  var out=[],i,k;
+  for(i=0;i<ch.length;i++) for(k=0;k<per;k++) out.push(k%4===0?ch[i][0]-12:0);
+  return out;
+}
+function arpOf(ch,per){
+  var out=[],i,k;
+  for(i=0;i<ch.length;i++){
+    var r=ch[i][0], n=[r,r+(ch[i][1]==='m'?3:4),r+7,r+12];
+    for(k=0;k<per;k++) out.push(k%2===0?n[(k/2)%4]:0);
+  }
+  return out;
+}
+function song(o){
+  o.bass=bassOf(o.ch,o.per); o.arp=arpOf(o.ch,o.per);
+  return o;
+}
+var SONGS={
+  /* титул: поход начинается */
+  title:song({bpm:96,per:8,ch:[[57,'m'],[65,'M'],[60,'M'],[67,'M']],
+    lead:[69,0,72,0,76,0,0,74, 72,0,0,69,0,0,0,0, 67,0,69,0,72,0,74,0, 72,0,69,0,67,0,0,0],
+    drum:'k...h...s...h...'}),
+  /* кухня: уютно и бестолково */
+  home:song({bpm:104,per:8,ch:[[60,'M'],[57,'m'],[65,'M'],[67,'M']],
+    lead:[72,0,74,0,76,0,74,0, 72,0,0,0,69,0,0,0, 77,0,76,0,74,0,72,0, 71,0,0,67,0,0,0,0],
+    drum:'k..hh..ks...h..h'}),
+  /* дорога: шагаем */
+  road:song({bpm:120,per:8,ch:[[57,'m'],[67,'M'],[65,'M'],[64,'M']],
+    lead:[69,0,69,0,72,0,69,0, 67,0,0,69,0,0,0,0, 65,0,65,0,69,0,65,0, 64,0,0,0,0,0,0,0],
+    drum:'k.h.s.h.k.h.s.h.'}),
+  /* лес ночью: страшновато */
+  forest:song({bpm:72,per:8,ch:[[64,'m'],[60,'M'],[57,'m'],[59,'M']],
+    lead:[0,0,0,0,76,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,72,0,71,0, 69,0,0,0,0,0,0,0],
+    drum:'....h.......h...'}),
+  /* утро: птицы и суп */
+  morning:song({bpm:94,per:8,ch:[[67,'M'],[62,'M'],[64,'m'],[60,'M']],
+    lead:[74,0,76,0,79,0,0,78, 76,0,0,74,0,0,0,0, 71,0,74,0,76,0,0,0, 72,0,71,0,69,0,0,0],
+    drum:'k...h...k...h..h'}),
+  /* пещера: капает и гремит */
+  cave:song({bpm:66,per:16,ch:[[62,'m'],[58,'M']],
+    lead:[0,0,0,0,0,0,0,0, 74,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 70,0,0,0,69,0,0,0],
+    drum:'................'}),
+  /* кристаллы: бежим! */
+  crystal:song({bpm:134,per:4,ch:[[64,'m'],[60,'M'],[62,'M'],[59,'M']],
+    lead:[76,76,0,76, 74,0,76,0, 79,0,78,0, 76,0,74,0],
+    drum:'k.hks.hkk.hks.hk'})
+};
+var SCENE_MUSIC={title:'title',select:'title',sounds:'title',home:'home',street:'road',
+  forest:'forest',morning:'morning',cave:'cave',crystal:'crystal'};
+function musStep(sg,i,t){
+  var n;
+  n=sg.bass[i%sg.bass.length]; if(n) mnote(n,t,0.20,'triangle',0.11);
+  n=sg.arp[i%sg.arp.length];   if(n) mnote(n,t,0.11,'triangle',0.030);
+  n=sg.lead[i%sg.lead.length]; if(n) mnote(n,t,0.14,'square',0.040);
+  var dch=sg.drum.charAt(i%sg.drum.length);
+  if(dch==='k') mkick(t);
+  else if(dch==='h') mnoise(t,0.03,0.030,4200);
+  else if(dch==='s') mnoise(t,0.12,0.055,1700);
+}
+function musTick(){
+  if(!AC||!MUS.song) return;
+  if(MUS.next<AC.currentTime) MUS.next=AC.currentTime+0.05;
+  var stepLen=60/MUS.song.bpm/4;
+  while(MUS.next<AC.currentTime+0.25){
+    if(!muted) musStep(MUS.song,MUS.step,MUS.next);
+    MUS.step++; MUS.next+=stepLen;
+  }
+}
+function musPlay(name){
+  if(MUS.name===name) return;
+  MUS.name=name; MUS.song=SONGS[name]||null; MUS.step=0;
+  if(!MUS.song){ musStop(); return; }
+  if(AC){ MUS.next=AC.currentTime+0.06; if(!MUS.timer) MUS.timer=setInterval(musTick,25); }
+}
+function musStop(){ if(MUS.timer){ clearInterval(MUS.timer); MUS.timer=null; } }
+
+function head(x,y,pal,style,f){
+  ctx.save(); ctx.translate(x,y); if(f<0)ctx.scale(-1,1);
+  R(-6,-6,12,12,pal.skin); R(-6,3,12,3,pal.dark);
+  if(style==='curls'){ R(-7,-10,14,5,pal.hair); R(-8,-7,2,4,pal.hair); R(6,-7,2,4,pal.hair);
+    R(-5,-12,4,3,pal.hair); R(0,-13,4,3,pal.hair); R(4,-12,3,3,pal.hair); }
+  else { R(-7,-10,14,6,pal.hair); R(-7,-5,3,4,pal.hair); R(3,-11,5,3,pal.hair); }
+  R(1,-2,2,3,pal.eye); R(2,-2,1,3,'#2A1A12'); R(-4,-2,2,3,pal.eye); R(-3,-2,1,3,'#2A1A12');
+  R(-2,3,4,1,pal.dark);
+  ctx.restore();
+}
+
+var TOL={coat:'#2C3140',coatD:'#20242F',skin:'#DFB694',dark:'#BE9375',hat:'#171A22',eye:'#FFF6E4'};
+var VIL={robe:'#B8894C',robeD:'#8F6836',skin:'#A9713F',dark:'#85552C',wrap:'#E7D6AF'};
+var GRD={suit:'#454B60',suitD:'#333850',skin:'#D8AE8B',cap:'#22263A'};
+
+function adult(x,y,o){
+  o=o||{}; var f=o.face||1, t=o.t||0, walk=o.walk?Math.sin(t*9):0;
+  ctx.save(); ctx.translate(Math.round(x),Math.round(y)); if(f<0) ctx.scale(-1,1);
+  var p=o.pal||TOL;
+  R(-6+walk*3,-14,5,14,p.coatD||p.suitD||p.robeD); R(1-walk*3,-14,5,14,p.coatD||p.suitD||p.robeD);
+  R(-6+walk*3,-2,6,2,'#15151A'); R(1-walk*3,-2,6,2,'#15151A');
+  R(-7,-32,14,19,p.coat||p.suit||p.robe);
+  R(-7,-32,14,4,p.coatD||p.suitD||p.robeD);
+  R(-10,-30,3,15,p.skin); R(7,-30,3,15,p.skin);
+  R(-6,-45,12,13,p.skin); R(-6,-36,12,3,p.dark||p.skin);
+  if(o.kind==='tolya'){ R(-9,-49,18,4,p.hat); R(-7,-52,14,4,p.hat); }
+  if(o.kind==='guard'){ R(-8,-48,16,4,p.cap); R(-6,-51,12,4,p.cap); R(-6,-41,12,3,'#0C0C10');
+    R(-11,-28,4,8,'#C24A2C'); R(-7,-30,14,2,'#2A2E3C'); }
+  if(o.kind==='villager'){ R(-8,-49,17,7,VIL.wrap); R(-9,-45,3,10,VIL.wrap); R(-3,-35,7,4,'#4A3A2A'); }
+  if(o.kind!=='guard'){
+    R(2,-41,2,3,p.eye||'#FFF'); R(2,-41,1,3,'#221A14');
+    R(-3,-41,2,3,p.eye||'#FFF'); R(-3,-41,1,3,'#221A14');
+  }
+  if(o.smile) R(-3,-36,7,2,'#F2E7D5');
+  ctx.restore();
+}
+
+/* ---------- диалоги ---------- */
+var SPK={
+  romo:{n:'Ромомэо',c:'#8FB877',draw:function(x,y){head(x,y,ROMO,'flat',1)}},
+  ome:{n:'Омешкин',c:'#F0A63C',draw:function(x,y){head(x,y,OME,'flat',1)}},
+  pel:{n:'Пельмешкин',c:'#C6453A',draw:function(x,y){head(x,y,PEL,'flat',1)}},
+  boka:{n:'Бока',c:'#C6453A',draw:function(x,y){head(x,y,PEL,'flat',1)}},
+  ami:{n:'Амира',c:'#B98FD0',draw:function(x,y){head(x,y,AMI,'flat',1)}},
+  mama:{n:'мама',c:'#EFD09A',draw:function(x,y){
+    ctx.save();ctx.translate(x,y);R(-6,-6,12,12,'#EFC6A2');R(-8,-11,17,7,'#5A3A28');R(-9,-6,3,8,'#5A3A28');
+    R(1,-2,2,3,'#FFF8E6');R(1,-2,1,3,'#221A14');R(-4,-2,2,3,'#FFF8E6');R(-4,-2,1,3,'#221A14');
+    R(-3,3,7,2,'#C6453A');ctx.restore()}},
+  kot:{n:'котёнок',c:'#EFE9D6',draw:function(x,y){
+    ctx.save();ctx.translate(x,y);C(0,0,7,'#F4F0E4');R(-6,-8,4,5,'#F4F0E4');R(2,-8,4,5,'#F4F0E4');
+    R(-4,-2,2,2,'#2A2620');R(2,-2,2,2,'#2A2620');R(-1,2,3,2,'#E0A0A8');ctx.restore()}},
+  gorelan:{n:'Горилан',c:'#F4A63C',draw:function(x,y){head(x,y,GOR,'curls',1)}},
+  all:{n:'все трое',c:'#EFE9D6',draw:function(x,y){
+    head(x-7,y,ROMO,'flat',1);head(x+1,y+1,OME,'flat',1);head(x+9,y,PEL,'flat',1)}},
+  tolya:{n:'дядя Толя',c:'#B9A0D8',draw:function(x,y){
+    ctx.save();ctx.translate(x,y);R(-6,-6,12,12,TOL.skin);R(-9,-10,18,4,TOL.hat);R(-7,-13,14,4,TOL.hat);
+    R(1,-2,2,3,'#FFF6E4');R(1,-2,1,3,'#221A14');R(-4,-2,2,3,'#FFF6E4');R(-4,-2,1,3,'#221A14');
+    R(-3,3,7,2,'#F2E7D5');ctx.restore()}},
+  villager:{n:'житель деревни',c:'#C9A66B',draw:function(x,y){
+    ctx.save();ctx.translate(x,y);R(-6,-6,12,12,VIL.skin);R(-8,-10,17,6,VIL.wrap);R(-9,-6,3,9,VIL.wrap);
+    R(1,-2,2,3,'#FFF6E4');R(1,-2,1,3,'#221A14');R(-4,-2,2,3,'#FFF6E4');R(-4,-2,1,3,'#221A14');
+    R(-3,3,7,3,'#4A3A2A');ctx.restore()}},
+  narr:{n:'',c:'#A08D7B',draw:null}
+};
+function Dialog(lines,onDone){
+  return {
+    lines:lines,i:0,c:0,done:false,_last:0,
+    update:function(dt){
+      if(this.done) return;
+      var L=this.lines[this.i];
+      if(!L){ this.done=true; if(onDone)onDone(); return; }
+      var full=L[1];
+      if(this.c<full.length){
+        this.c+=dt*60;
+        if(Math.floor(this.c)>this._last+2){ this._last=Math.floor(this.c); sfx('talk'); }
+        if(this.c>full.length) this.c=full.length;
+      }
+      if(press('A')){
+        if(this.c<full.length){ this.c=full.length; }
+        else { this.i++; this.c=0; this._last=0;
+          if(this.i>=this.lines.length){ this.done=true; if(onDone)onDone(); } }
+      }
+    },
+    draw:function(){
+      var L=this.lines[this.i]; if(!L) return;
+      var sp=SPK[L[0]]||SPK.narr, x=12,y=206,w=456,h=56;
+      ctx.globalAlpha=.93; R(x,y,w,h,'#140F0C'); ctx.globalAlpha=1;
+      R(x,y,w,1,'#E9C87C'); R(x,y+h-1,w,1,'#E9C87C'); R(x,y,1,h,'#E9C87C'); R(x+w-1,y,1,h,'#E9C87C');
+      var tx=x+12;
+      if(sp.draw){
+        var nw=measure(sp.n,9,FB,'500')+14;
+        R(x+6,y-13,nw,13,'#140F0C'); R(x+6,y-13,nw,1,sp.c);
+        R(x+6,y-13,1,13,sp.c); R(x+6+nw-1,y-13,1,13,sp.c);
+        T(sp.n,x+13,y-4,{size:9,color:sp.c,weight:'500'});
+        sp.draw(x+22,y+28); tx=x+44;
+      }
+      var lines=wrap(L[1],w-(tx-x)-18,11,FB), shown=Math.floor(this.c), used=0;
+      for(var i=0;i<lines.length && i<3;i++){
+        var s=lines[i], vis=Math.max(0,Math.min(s.length,shown-used));
+        T(s.slice(0,vis),tx,y+19+i*15,{size:11,color:sp===SPK.narr?'#CDBBA5':'#F6ECD8'});
+        used+=s.length+1;
+      }
+      if(shown>=L[1].length && Math.floor(now*2)%2===0)
+        T('▼',x+w-16,y+h-8,{size:9,color:'#F4A63C'});
+    }
+  };
+}
+
+/* ---------- сцены ---------- */
+var S={}, cur=null, curName='', now=0;
+var fade=0, fadeDir=0, fadeTo=null, fadeArg=null;
+function go(n,o){
+  curName=n; cur=S[n](o||{}); updateChip();
+  var m=SCENE_MUSIC[n]; if(m) musPlay(m);   // у заставки главы темы нет — играет прежняя
+}
+function goFade(n,o){ fadeDir=1; fadeTo=n; fadeArg=o||{}; }
+var CH=[
+  {id:'home',n:'Глава 1',t:'Дома'},
+  {id:'street',n:'Глава 2',t:'Улица'},
+  {id:'forest',n:'Глава 3',t:'Лес'},
+  {id:'morning',n:'Глава 4',t:'Утро'},
+  {id:'cave',n:'Глава 5',t:'Страшная глубь'},
+  {id:'crystal',n:'Финал',t:'Синие кристаллы'}
+];
+var chIndex=0;
+function updateChip(){
+  if(curName==='sounds') chapterEl.textContent='Проба звуков';
+  else if(curName==='title'||curName==='select') chapterEl.textContent='Титульный экран';
+  else chapterEl.textContent=CH[chIndex].n+' · '+CH[chIndex].t;
+}
+function saveProg(i){ try{ var p=loadProg(); if(i>p) localStorage.setItem('omir_progress',String(i)); }catch(e){} }
+function loadProg(){ try{ return parseInt(localStorage.getItem('omir_progress')||'0',10)||0; }catch(e){ return 0; } }
+function startChapter(i){ chIndex=i; saveProg(i); goFade('card',{i:i}); }
+function nextChapter(){ if(chIndex<CH.length-1) startChapter(chIndex+1); else goFade('title',{}); }
+function restartChapter(){ goFade(CH[chIndex].id,{}); }
+
+/* заставка главы */
+S.card=function(o){
+  var i=o.i||0, t=0;
+  return { update:function(dt){ t+=dt; if(t>2.1||press('A')) goFade(CH[i].id,{}); },
+    draw:function(){
+      R(0,0,W,H,'#120E0C');
+      for(var k=0;k<40;k++){ var sx=(k*97)%W, sy=(k*53)%H; R(sx,sy,1,1,'rgba(233,200,124,'+(0.05+(k%5)*0.02)+')'); }
+      var a=Math.min(1,t*3);
+      ctx.globalAlpha=a;
+      R(60,116,4,40,'#C24A2C');
+      T(CH[i].n.toUpperCase(),76,132,{size:13,font:FB,weight:'500',color:'#F4A63C'});
+      T(CH[i].t,76,158,{size:26,font:FD,color:'#E9C87C'});
+      ctx.globalAlpha=1;
+    }};
+};
+
+
+/* ---------- общее для леса ---------- */
+var GROUND=214;
+function heroPose(walking,t){ return walking?'walk':'idle'; }
+function drawRomo(x,y,o){ o=o||{}; o.pal=ROMO; return kid(x,y,o); }
+function drawOme(x,y,o){ o=o||{}; o.pal=OME; return kid(x,y,o); }
+function drawPel(x,y,o){ o=o||{}; o.pal=PEL; o.big=1; o.belly=1; return kid(x,y,o); }
+function trio(x,y,t,face,walk){          // Ромомэо ведёт, остальные тянутся сзади
+  var f=face||1;
+  drawPel(x-52*f,y,{face:f,pose:walk?'walk':'idle',t:t+0.6});
+  drawOme(x-26*f,y,{face:f,pose:walk?'walk':'idle',t:t+0.3});
+  drawRomo(x,y,{face:f,pose:walk?'walk':'idle',t:t});
+}
+function pine(x,y,h,c1,c2){
+  R(x-2,y-h*0.25,4,h*0.25,'#4A3A28');
+  var w=h*0.42,i;
+  for(i=0;i<3;i++){
+    var yy=y-h*0.25-i*h*0.24, ww=w*(1-i*0.24);
+    ctx.fillStyle=i%2?c2:c1;
+    ctx.beginPath(); ctx.moveTo(x,yy-h*0.34); ctx.lineTo(x+ww,yy); ctx.lineTo(x-ww,yy); ctx.closePath(); ctx.fill();
+  }
+}
+function birch(x,y,h){
+  R(x-3,y-h,6,h,'#DDD6C2'); R(x-3,y-h,2,h,'#EFE9D6');
+  for(var i=0;i<5;i++) R(x-3,y-h+8+i*(h/5),5,2,'#3A3428');
+  ctx.fillStyle='#6E9A55';
+  ctx.beginPath(); ctx.ellipse(x,y-h-6,14,10,0,0,6.2832); ctx.fill();
+}
+function forestBg(cam,night){
+  var g=ctx.createLinearGradient(0,0,0,H);
+  if(night){ g.addColorStop(0,'#101A18'); g.addColorStop(0.6,'#16241D'); g.addColorStop(1,'#1D2A20'); }
+  else { g.addColorStop(0,'#7FB5C4'); g.addColorStop(0.55,'#A8C99B'); g.addColorStop(1,'#8AA86C'); }
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  var i,x;
+  for(i=0;i<14;i++){                       // дальний лес
+    x=((i*97-cam*0.25)%(W+120)+W+120)%(W+120)-60;
+    pine(x,196,54+((i*13)%22),night?'#16251C':'#4E7A4A',night?'#12201A':'#436B40');
+  }
+  for(i=0;i<10;i++){
+    x=((i*143-cam*0.55)%(W+180)+W+180)%(W+180)-90;
+    pine(x,214,84+((i*17)%26),night?'#101D16':'#3E6A3C',night?'#0D1812':'#356034');
+  }
+  R(0,GROUND,W,H-GROUND,night?'#1A2418':'#5E7A44');
+  R(0,GROUND,W,3,night?'#24301F':'#6E8C50');
+  for(i=0;i<50;i++){
+    var gx=((i*53-cam*0.9)%W+W)%W;
+    R(gx,GROUND+6+((i*29)%40),3,2,night?'#223019':'#6E8C50');
+  }
+}
+function torchlight(x,y,r,a){
+  var gg=ctx.createRadialGradient(x,y,6,x,y,r);
+  gg.addColorStop(0,'rgba(240,166,60,'+(a||0.3)+')'); gg.addColorStop(1,'rgba(240,166,60,0)');
+  ctx.fillStyle=gg; ctx.fillRect(x-r,y-r,r*2,r*2);
+}
+function darkness(x,y,r){
+  var v=ctx.createRadialGradient(x,y,r*0.35,x,y,r);
+  v.addColorStop(0,'rgba(6,10,8,0)'); v.addColorStop(1,'rgba(6,10,8,.93)');
+  ctx.fillStyle=v; ctx.fillRect(0,0,W,H);
+}
+/* звуки второй игры */
+function meow(){
+  if(muted||!AC) return;
+  playVoice({dur:0.5,jit:0.02,shim:0.2,noise:0.16,drive:8,vol:0.26,attack:0.05,
+    pts:[[0,520],[0.25,700],[1,430]],
+    formants:[[900,2.4,1],[2200,1.8,0.7],[3300,1.4,0.4]],direct:0.25,lp0:5200,lp1:1800});
+}
+function monsterVoice(kind){
+  if(muted||!AC) return;
+  var die=kind==='wake';
+  playVoice({dur:die?1.4:0.8,jit:0.08,shim:0.3,noise:0.42,sub:true,drive:60,
+    vol:die?0.42:0.34,attack:0.12,
+    pts:die?[[0,58],[0.15,74],[0.6,60],[1,28]]:[[0,62],[0.12,78],[1,36]],
+    formants:[[240,2.4,1],[620,1.7,0.7],[1400,1.2,0.4]],direct:0.45,lp0:1700,lp1:220});
+  noiseBand(AC.currentTime,0.14,0.34,700,0.8);
+  noiseBand(AC.currentTime+0.05,die?1.2:0.7,0.3,240,0.7);
+}
+function pukSound(){                     // куда же без этого
+  if(muted||!AC) return;
+  var t=AC.currentTime;
+  playVoice({dur:0.34,jit:0.12,shim:0.4,noise:0.3,sub:true,drive:30,vol:0.3,attack:0.02,
+    pts:[[0,120],[0.4,86],[1,64]],
+    formants:[[300,1.6,1],[820,1.3,0.5]],direct:0.5,lp0:1400,lp1:300});
+  noiseBand(t,0.3,0.22,340,0.9);
+}
+function splash(){ noise(0.2,0.2); tone(600,0.2,'sine',0.08,200); }
+function crystalDing(){ tone(1180,0.35,'sine',0.09,880); tone(1760,0.3,'sine',0.05,1320); }
+
+/* ---------- титульный экран ---------- */
+function duskForest(t){
+  var g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#26364A'); g.addColorStop(0.45,'#6E5A6A'); g.addColorStop(1,'#C08A5A');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  C(392,70,16,'#F6D9A0');
+  for(var k=0;k<30;k++){ var sx=(k*83+11)%W, sy=(k*37)%80;
+    R(sx,sy,1,1,'rgba(255,250,230,'+(0.2+0.4*Math.abs(Math.sin(t*1.1+k)))+')'); }
+  var i;
+  for(i=0;i<12;i++) pine((i*44+8)%W,198,50+((i*19)%24),'#2A3D2E','#233427');
+  for(i=0;i<8;i++) pine((i*66+30)%W,216,86+((i*23)%20),'#1B2A20','#16241B');
+  R(0,GROUND,W,H-GROUND,'#22301D'); R(0,GROUND,W,3,'#2C3D25');
+}
+S.title=function(){
+  var t=0, sel=0, prog=loadProg();
+  var items=[{l:'Играть с начала',a:function(){startChapter(0)}}];
+  if(prog>0) items.push({l:'Продолжить · '+CH[prog].n,a:function(){startChapter(prog)}});
+  if(prog>0) items.push({l:'Выбрать главу',a:function(){goFade('select',{})}});
+  return { update:function(dt){
+      t+=dt;
+      if(press('U')){ sel=(sel+items.length-1)%items.length; sfx('pick'); }
+      if(press('D')){ sel=(sel+1)%items.length; sfx('pick'); }
+      if(press('A')){ sfx('win'); items[sel].a(); }
+    },
+    draw:function(){
+      duskForest(t);
+      trio(200,GROUND,t,1,false);
+      ctx.globalAlpha=.72; R(0,22,W,112,'#0E1410'); ctx.globalAlpha=1;
+      R(0,134,W,1,'rgba(143,184,119,.25)');
+      T('ОМЕШКИН, РОМОМЭО',24,62,{size:24,font:FD,color:'#EFE9D6',shadowColor:'#0B120E'});
+      T('И ПЕЛЬМЕШКИН',24,92,{size:24,font:FD,color:'#F0A63C',shadowColor:'#0B120E'});
+      T('в лесу',352,92,{size:22,font:FH,color:'#8FB877'});
+      T('шесть глав, суп из раков и один голубой монстр',26,118,{size:13,font:FH,color:'#B9C7B0'});
+      for(var i=0;i<items.length;i++){
+        var y=162+i*20, on=i===sel;
+        if(on){ R(20,y-11,measure(items[i].l,12,FB,'700')+28,16,'rgba(240,166,60,.2)');
+          T('▸',24,y,{size:11,color:'#F0A63C'}); }
+        T(items[i].l,38,y,{size:12,weight:'700',color:on?'#EFE9D6':'#93A48C'});
+      }
+      if(Math.floor(t*1.6)%2===0)
+        T('↑ ↓ — выбрать · Z или ПРОБЕЛ — начать',24,250,{size:9,color:'#93A48C'});
+    }};
+};
+S.select=function(){
+  var prog=loadProg(), sel=prog, t=0;
+  return { update:function(dt){
+      t+=dt;
+      if(press('U')){ sel=(sel+prog)%(prog+1); sfx('pick'); }
+      if(press('D')){ sel=(sel+1)%(prog+1); sfx('pick'); }
+      if(press('A')) startChapter(sel);
+      if(press('P')) goFade('title',{});
+    },
+    draw:function(){
+      duskForest(t); ctx.fillStyle='rgba(14,20,16,.72)'; ctx.fillRect(0,0,W,H);
+      T('ВЫБОР ГЛАВЫ',28,44,{size:20,font:FD,color:'#EFE9D6'});
+      for(var i=0;i<=prog;i++){
+        var y=74+i*22, on=i===sel;
+        if(on) R(22,y-13,320,18,'rgba(240,166,60,.18)');
+        T(CH[i].n,28,y,{size:10,color:on?'#F0A63C':'#7D8C77',weight:'700'});
+        T(CH[i].t,92,y,{size:12,color:on?'#EFE9D6':'#93A48C'});
+      }
+      T('Esc — назад',28,250,{size:9,color:'#93A48C'});
+    }};
+};
+
+/* ---------- глава 1: дома ---------- */
+function kitchen(t){
+  R(0,0,W,H,'#C9B08A'); R(0,0,W,120,'#D8C097');
+  for(var i=0;i<W;i+=60) R(i,0,2,GROUND,'rgba(160,130,95,.35)');
+  R(300,40,120,74,'#6E9AB0'); R(300,40,120,6,'#8A6A48'); R(356,40,6,74,'#8A6A48');
+  R(300,110,120,6,'#8A6A48');
+  for(var k=0;k<5;k++) pine(310+k*26,104,26+((k*7)%10),'#3E6A3C','#356034');
+  R(0,GROUND,W,H-GROUND,'#8A6A48'); R(0,GROUND,W,3,'#9E7C56');
+  R(30,150,90,10,'#7A5A3A'); R(34,160,6,54,'#6B4E32'); R(110,160,6,54,'#6B4E32');
+  R(44,142,16,10,'#D8DCE0'); R(48,138,8,4,'#B8BCC0');
+  R(150,176,180,8,'#A8814E'); R(156,184,8,30,'#7A5A3A'); R(322,184,8,30,'#7A5A3A');
+  R(196,160,18,16,'#E8E2D0'); R(214,164,8,3,'#E8E2D0');
+  R(240,164,12,12,'#EFD9A8'); R(268,166,10,10,'#C6453A');
+  var st=Math.sin(t*3)*2;
+  R(200,152+st,2,8,'rgba(240,240,230,.5)'); R(206,150+st,2,9,'rgba(240,240,230,.35)');
+}
+S.home=function(){
+  var t=0, ph='tea', d=null, x=110, wt=0, msg='', msgT=0;
+  var items=[
+    {x:60,n:'фонарик',ok:1},{x:110,n:'ножик',ok:1},{x:160,n:'спички',ok:1},
+    {x:210,n:'консерва',ok:1},{x:262,n:'палатка',ok:1},{x:316,n:'карта',ok:1},
+    {x:368,n:'пельмени',ok:0,j:'Только попробуй взять пельмешки!'},
+    {x:404,n:'мороженое',ok:0,j:'Растает же. Ну ладно, бери.'},
+    {x:436,n:'матрас',ok:0,j:'Матрас в рюкзак не лезет.'}
+  ];
+  var need=6, got=0, taken={};
+  function flash(s){ msg=s; msgT=2; }
+  function say(l,a){ d=Dialog(l,a); }
+  say([['narr','Мы всей компашкой сидели за столом, пили чай. И вдруг тишину перебил Пельмешкин.'],
+       ['pel','Я пельмешки хочу!'],
+       ['romo','Пойдёмте в тёмную пещеру или на гору...'],
+       ['pel','Может, всё-таки поедим пельмешки?'],
+       ['ome','Да ты надоел со своими пельменями! Давайте лучше морошку поедим!'],
+       ['romo','Да тем более я ещё не договорил. Зачем ты меня перебиваешь?'],
+       ['romo','Пойдёмте в лес.'],
+       ['pel','А там есть пельмешки?'],
+       ['romo','Нет, там есть грибы.'],
+       ['ome','А это что-то съедобное?'],
+       ['pel','А там пельмешки есть?'],
+       ['romo','Нет там пельмешек! Ну что, пойдём в лес?'],
+       ['ome','Да.'],
+       ['pel','А пельмешки с собой возьмём?'],
+       ['narr','Минута молчания. Все взгляды уставились на Пельмешкина.'],
+       ['romo','Собирайте рюкзаки. Берите всё самое нужное.'],
+       ['pel','Эй, вообще-то меня зовут Бока.']],
+      function(){ ph='pack'; });
+  return {
+    update:function(dt){
+      t+=dt; if(msgT>0) msgT-=dt;
+      if(ph==='tea'||ph==='op'){ d.update(dt); return; }
+      var mv=0; if(isDown('L'))mv=-1; if(isDown('R'))mv=1;
+      if(mv){ x+=mv*90*dt; wt+=dt; }
+      x=Math.max(30,Math.min(452,x));
+      if(press('A')){
+        for(var i=0;i<items.length;i++){
+          var it=items[i];
+          if(!taken[i] && Math.abs(it.x-x)<20){
+            taken[i]=1; sfx('pick');
+            if(it.ok){ got++; flash('В рюкзак: '+it.n+'  ('+got+' из '+need+')'); }
+            else flash(it.j);
+            if(got>=need){
+              ph='op';
+              say([['narr','Ромомэо взял всё самое нужное: фонарик, ножик, спички, консервы, палатку, спальник, котелок, ложки, хлеб, карту и компас.'],
+                   ['narr','Омешкин взял свой годовой запас вкусняшек. Матрас не влез — пришлось взять одеяло и подушку.'],
+                   ['ome','Я ещё котю хотел, но он не поместился.'],
+                   ['narr','А Пельмешкин взял побольше пельменей и соус для чипсов. Про одеяло и подушку он забыл.'],
+                   ['romo','Так. Теперь надо как-то отпроситься у мамы.'],
+                   ['ome','Скажем, что идём на речку, а сами пойдём в лес!'],
+                   ['romo','Мама не пустит одних. Скажет идти с Амирой, а она всё расскажет.'],
+                   ['ome','Сначала искупаемся, а когда Амира уйдёт — пойдём в лес.'],
+                   ['all','Хорошая идея!'],
+                   ['narr','Операция «О.М.И.Р.А.», пункт первый: пойти на кухню, где мама что-то жарит на сковородке.'],
+                   ['all','Мама, можно мы пойдём на речку?'],
+                   ['mama','Да, только с Амирой.'],
+                   ['all','Хорошо, мама!'],
+                   ['narr','Пункт второй: зайти к Амире.'],
+                   ['ami','Вы что, сами не можете?'],
+                   ['romo','Нам мама не разрешает.'],
+                   ['ami','Эх, ладно, пойдёмте.'],
+                   ['narr','Пункт третий: искупаться. Пункт четвёртый: вернуться через окно.'],
+                   ['narr','Пункт пятый: пока никто не видит — взять рюкзаки и уйти в лес.'],
+                   ['all','Вся сложная и продуманная операция закончена!']],
+                  function(){ nextChapter(); });
+            }
+            break;
+          }
+        }
+      }
+    },
+    draw:function(){
+      kitchen(t);
+      if(ph==='tea'){
+        drawRomo(150,GROUND,{face:1,pose:'idle',t:t});
+        drawOme(200,GROUND,{face:-1,pose:'idle',t:t});
+        drawPel(300,GROUND,{face:-1,pose:'idle',t:t});
+      } else {
+        for(var i=0;i<items.length;i++){
+          if(taken[i]) continue;
+          var it=items[i], ix=it.x, iy=GROUND-6;
+          if(it.n==='фонарик'){ R(ix-7,iy-8,14,8,'#5A6470'); R(ix+7,iy-6,4,4,'#F6E3A8'); }
+          else if(it.n==='ножик'){ R(ix-8,iy-4,12,3,'#D9DEE6'); R(ix+4,iy-5,6,5,'#7A4B2A'); }
+          else if(it.n==='спички'){ R(ix-6,iy-9,12,9,'#C6453A'); R(ix-4,iy-7,8,3,'#EFE9D6'); }
+          else if(it.n==='консерва'){ R(ix-7,iy-10,14,10,'#9AA3AC'); R(ix-7,iy-10,14,3,'#B8C0C8'); }
+          else if(it.n==='палатка'){ ctx.fillStyle='#3F7A54'; ctx.beginPath();
+            ctx.moveTo(ix,iy-14); ctx.lineTo(ix+12,iy); ctx.lineTo(ix-12,iy); ctx.closePath(); ctx.fill(); }
+          else if(it.n==='карта'){ R(ix-9,iy-10,18,10,'#E8DCB8'); R(ix-6,iy-7,12,1,'#9C7A50'); R(ix-3,iy-4,8,1,'#9C7A50'); }
+          else if(it.n==='пельмени'){ EL(ix-4,iy-4,5,4,'#EFE2C8'); EL(ix+3,iy-6,5,4,'#EFE2C8'); EL(ix,iy-3,5,4,'#E4D6B8'); }
+          else if(it.n==='мороженое'){ R(ix-3,iy-6,6,6,'#D8A46A'); C(ix,iy-9,5,'#F4E8F0'); }
+          else { R(ix-14,iy-7,28,7,'#7FA8C4'); R(ix-14,iy-7,28,2,'#9CC0D8'); }
+          if(Math.abs(it.x-x)<20&&Math.floor(t*2)%2===0)
+            T('[Z] '+it.n,ix,iy-20,{size:9,color:'#F0A63C',align:'center'});
+        }
+        drawRomo(x,GROUND,{face:(isDown('L')?-1:1),pose:(isDown('L')||isDown('R'))?'walk':'idle',t:wt});
+        R(12,10,150,16,'rgba(14,20,16,.8)');
+        T('в рюкзаке нужного: '+got+' из '+need,18,22,{size:10,color:'#8FB877'});
+        if(msgT>0){ ctx.globalAlpha=Math.min(1,msgT);
+          T(msg,W/2,60,{size:12,font:FD,color:'#F0A63C',align:'center'}); ctx.globalAlpha=1; }
+      }
+      if(ph==='tea'||ph==='op') d.draw();
+    }};
+};
+
+/* ---------- глава 2: улица ---------- */
+S.street=function(){
+  var WW=2600, x=40, t=0, wt=0, d=null, mode='talk', cam=0, msg='', msgT=0;
+  var forks=[{x:700,dir:'R',done:false},{x:1500,dir:'L',done:false},{x:2150,dir:'R',done:false}];
+  var fork=null, spirt=false, whine1=false, whine2=false, bottle={x:1150,taken:false,fly:0};
+  function flash(s){ msg=s; msgT=1.8; }
+  function say(l,a){ d=Dialog(l,a); mode='talk'; }
+  say([['ome','А куда нам идти?'],
+       ['romo','Сейчас посмотрим на карте. Наш дом на северо-западе, до леса пять километров.'],
+       ['romo','Нам надо идти направо. Ну что, пойдёмте!'],
+       ['narr','Иди вправо. У столбов смотри на карту и жми стрелку в нужную сторону.']],
+      function(){ mode='walk'; });
+  return {
+    update:function(dt){
+      t+=dt; if(msgT>0) msgT-=dt;
+      if(mode==='talk'){ d.update(dt); return; }
+      if(mode==='fork'){
+        var okR=fork.dir==='R'&&press('R'), okL=fork.dir==='L'&&press('L');
+        if(okR||okL){ fork.done=true; fork=null; mode='walk'; sfx('win'); flash('ВЕРНО!'); }
+        else if((fork.dir==='R'&&press('L'))||(fork.dir==='L'&&press('R'))){
+          sfx('hurt'); flash('НЕ ТУДА! Смотри на карту'); }
+        return;
+      }
+      if(bottle.fly>0) bottle.fly-=dt;
+      var mv=0; if(isDown('L'))mv=-1; if(isDown('R'))mv=1;
+      if(mv){ x+=mv*84*dt; wt+=dt; }
+      x=Math.max(20,Math.min(WW,x));
+      for(var i=0;i<forks.length;i++)
+        if(!forks[i].done && Math.abs(forks[i].x-x)<14 && mv>0){ fork=forks[i]; mode='fork'; sfx('alarm'); }
+      if(!spirt && x>bottle.x-30){
+        spirt=true; bottle.fly=1.2;
+        say([['ome','О, смотрите, там спирт!'],
+             ['romo','Какой ещё спирт?'],
+             ['ome','Да вот же, спирт тут!'],
+             ['romo','Молодец. Может, тебе ещё грамоту выдать? Только не поднимай его.'],
+             ['narr','И в ту же секунду он оказался у него в руках.'],
+             ['ome','Я случайно.']],function(){ mode='walk'; bottle.taken=true; });
+      }
+      if(!whine1 && x>380){ whine1=true;
+        say([['ome','А сколько ещё идти? Я уже голодный.'],
+             ['romo','Подожди ещё где-то час.'],
+             ['ome','Ого, как много!'],
+             ['pel','А может, пельмешки поедим?'],
+             ['romo','Подождите немного.']],function(){ mode='walk'; }); }
+      if(!whine2 && x>1900){ whine2=true;
+        say([['narr','Они шли, шли, потом завернули, потом снова шли. И ещё раз шли.'],
+             ['pel','Бока устал.']],function(){ mode='walk'; }); }
+      if(x>=WW-4){
+        mode='talk';
+        say([['narr','Они зашли на холм и увидели вдалеке закат. Облака развело, и с каждой минутой становилось всё темнее.'],
+             ['narr','К ночи они подошли к огромному и страшному лесу.'],
+             ['ome','Может, пойдём обратно?'],
+             ['pel','Нет, я не могу больше ждать. Я хочу пельмешки!'],
+             ['romo','Раз пошли — значит, возвращаться нельзя.'],
+             ['narr','И они зашли в лес.']],function(){ nextChapter(); });
+      }
+    },
+    draw:function(){
+      cam=Math.max(0,Math.min(WW-W+140,x-W/2));
+      var pr=Math.min(1,x/WW);
+      var g=ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,pr<0.6?'#7FB5C4':'#4E5A7A'); 
+      g.addColorStop(0.55,pr<0.6?'#BBD3C0':'#B07A62');
+      g.addColorStop(1,pr<0.6?'#9CB77A':'#C89A62');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      C(pr<0.6?90:400,pr<0.6?48:96,pr<0.6?14:17,pr<0.6?'#FFF8DC':'#F6C878');
+      ctx.save(); ctx.translate(-cam*0.3,0);
+      for(var i=0;i<22;i++) pine((i*160)%3200,190,40+((i*13)%18),'#4A6B48','#3E5C3E');
+      ctx.restore();
+      R(0,GROUND,W,H-GROUND,'#7E8C54'); R(0,GROUND,W,3,'#90A063');
+      ctx.save(); ctx.translate(-cam,0);
+      R(0,GROUND-6,WW+200,16,'#C0A878'); R(0,GROUND-6,WW+200,2,'#D0B88A');
+      for(var tr=0;tr<WW+200;tr+=30) R(tr,GROUND+4,16,2,'#A89460');
+      for(var f=0;f<forks.length;f++){                       // столбы с указателями
+        var fx=forks[f].x;
+        R(fx-2,GROUND-44,4,44,'#8A6A48');
+        R(forks[f].dir==='R'?fx:fx-26,GROUND-48,26,10,forks[f].done?'#6E8C50':'#C6453A');
+        T(forks[f].dir==='R'?'→':'←',fx+(forks[f].dir==='R'?13:-13),GROUND-40,
+          {size:10,font:FD,color:'#EFE9D6',align:'center'});
+      }
+      if(!bottle.taken){                                      // тот самый спирт
+        var by=GROUND-10-(bottle.fly>0?Math.sin((1.2-bottle.fly)*3.14)*26:0);
+        R(bottle.x-4,by-14,8,14,'rgba(210,235,225,.85)'); R(bottle.x-3,by-18,6,5,'#9AA3AC');
+        R(bottle.x-4,by-10,8,5,'#E8E2D0'); T('С',bottle.x,by-6,{size:6,color:'#3A3428',align:'center'});
+      }
+      for(var b=0;b<26;b++){
+        var bx=(b*103)%WW, bh=10+((b*7)%8);
+        EL(bx,GROUND-bh*0.5,9,bh*0.6,'#5E7C42'); EL(bx+6,GROUND-bh*0.4,6,bh*0.4,'#6E8C50');
+        if(b%3===0){ R(bx-14,GROUND-6,2,6,'#6E8C50'); C(bx-13,GROUND-8,2,'#E8D06A'); }
+        if(b%4===1){ R(bx+16,GROUND-7,2,7,'#6E8C50'); C(bx+17,GROUND-9,2,'#D87E9E'); }
+      }
+      var far=Math.max(0,1-(WW-x)/500);
+      if(far>0){ ctx.globalAlpha=far;
+        for(var q=0;q<10;q++) pine(WW+20+q*40,GROUND,90,'#24361F','#1C2C19');
+        ctx.globalAlpha=1; }
+      trio(x,GROUND,wt,1,isDown('L')||isDown('R'));
+      ctx.restore();
+      R(12,10,120,16,'rgba(14,20,16,.75)');
+      T('до леса',18,22,{size:9,color:'#93A48C'});
+      R(58,14,66,8,'rgba(0,0,0,.4)'); R(58,14,66*pr,8,'#8FB877');
+      if(mode==='fork'){
+        R(W/2-84,64,168,54,'rgba(14,20,16,.92)'); R(W/2-84,64,168,1,'#8FB877');
+        T('КАРТА ГОВОРИТ:',W/2,84,{size:10,color:'#93A48C',align:'center'});
+        T(fork.dir==='R'?'ИДЁМ НАПРАВО →':'← ИДЁМ НАЛЕВО',W/2,106,
+          {size:14,font:FD,color:Math.floor(t*6)%2?'#F0A63C':'#EFE9D6',align:'center'});
+      }
+      if(msgT>0){ ctx.globalAlpha=Math.min(1,msgT);
+        T(msg,W/2,140,{size:13,font:FD,color:'#F0A63C',align:'center'}); ctx.globalAlpha=1; }
+      if(mode==='talk') d.draw();
+    }};
+};
+
+/* ---------- глава 3: лес ---------- */
+S.forest=function(){
+  var WW=1500, x=300, t=0, wt=0, d=null, mode='talk', cam=0, fire=0, msg='', msgT=0;
+  var CAMP=240, sticks=[], leaves=[], gotS=0, gotL=0, needS=8, needL=6, J={y:0,vy:0,roll:0};
+  for(var i=0;i<needS;i++) sticks.push({x:420+i*130+((i*37)%50),got:false});
+  for(var i2=0;i2<needL;i2++) leaves.push({x:480+i2*170+((i2*53)%60),got:false});
+  function flash(s){ msg=s; msgT=1.6; }
+  function say(l,a){ d=Dialog(l,a); mode='talk'; }
+  say([['narr','В лесу стало ещё страшнее.'],
+       ['pel','Всё, давайте есть пельмешки!'],
+       ['romo','Нет, сначала надо найти место для ночлега.'],
+       ['narr','Ромомэо достал из рюкзака фонарь и включил. Вокруг стало светлее.'],
+       ['romo','Вот поваленное дерево — хороший ночлег. Собирайте палки и сушёные листья, их надо много.'],
+       ['narr','Ходи по лесу и жми Z рядом с палками и листьями.']],
+      function(){ mode='play'; });
+  return {
+    update:function(dt){
+      t+=dt; if(msgT>0) msgT-=dt;
+      if(mode==='talk'){ d.update(dt); return; }
+      if(mode==='fire'){
+        fire+=press('A')?7:0; fire-=6*dt;
+        if(press('A')) sfx('step');
+        fire=Math.max(0,fire);
+        if(fire>=100){
+          mode='talk';
+          say([['narr','Ромомэо достал спички и развёл огонь, потом поставил палатку.'],
+               ['romo','Садитесь и давайте кушать.'],
+               ['narr','Ромомэо достал консерву и хлеб, Омешкин — вкусняшки, а Пельмешкин — вы сами знаете.'],
+               ['narr','Ребята покушали и начали собираться спать.'],
+               ['pel','А на чём мне спать?'],
+               ['romo','Ты что, ничего не взял? Ну ничего, ложись в палатку, а одеялом поделится Омешкин.'],
+               ['ome','Э, что? Я с ним одеялом делиться не буду!'],
+               ['pel','А я с ним спать не хочу, он пукает по ночам!'],
+               ['ome','Эй, это ТЫ пукаешь по ночам! Объешься пельменями — и всю ночь...'],
+               ['narr','И вдруг Пельмешкин пукнул. Потом снова пукнул.'],
+               ['pel','Ой, извините. Мне надо в туалет.'],
+               ['romo','Ну понятно, кто пукает по ночам.'],
+               ['narr','Пельмешкин покраснел, но ничего не сказал и побежал за дерево.'],
+               ['romo','Давайте просто это забудем и пойдём спать.'],
+               ['narr','Неизвестно, поделился ли Омешкин одеялом с Бокой.']],
+              function(){ nextChapter(); });
+          sfx('win');
+        }
+        return;
+      }
+      var mv=0; if(isDown('L'))mv=-1; if(isDown('R'))mv=1;
+      if(press('U')) jumpNow(J);
+      if(press('B')) rollNow(J);
+      if(J.roll>0){ J.roll-=dt; x+=(isDown('L')?-1:1)*180*dt; wt+=dt; }
+      else if(mv){ x+=mv*92*dt; wt+=dt; }
+      gravity(J,dt);
+      x=Math.max(20,Math.min(WW,x));
+      if(press('A')){
+        var did=false,i3;
+        for(i3=0;i3<sticks.length;i3++) if(!sticks[i3].got&&Math.abs(sticks[i3].x-x)<22){
+          sticks[i3].got=true; gotS++; did=true; sfx('pick'); break; }
+        if(!did) for(i3=0;i3<leaves.length;i3++) if(!leaves[i3].got&&Math.abs(leaves[i3].x-x)<22){
+          leaves[i3].got=true; gotL++; did=true; sfx('pick'); break; }
+        if(!did && Math.abs(x-CAMP)<30){
+          if(gotS>=needS&&gotL>=needL){ mode='fire'; flash('ЖМИ Z, ЧТОБЫ РАЗДУТЬ ОГОНЬ'); }
+          else flash('Ещё дров мало: палки '+gotS+'/'+needS+', листья '+gotL+'/'+needL);
+        }
+        if(did&&gotS>=needS&&gotL>=needL) flash('Хватит! Неси всё к поваленному дереву ←');
+      }
+    },
+    draw:function(){
+      cam=Math.max(0,Math.min(WW-W,x-W/2));
+      forestBg(cam,true);
+      ctx.save(); ctx.translate(-cam,0);
+      R(CAMP-60,GROUND-16,120,16,'#4A3A28'); R(CAMP-60,GROUND-16,120,4,'#5C4A34');
+      for(var s2=0;s2<6;s2++) R(CAMP-50+s2*20,GROUND-22,4,6,'#3A2E20');
+      R(CAMP-14,GROUND-2,28,4,'#6E5A3A');
+      if(mode==='fire'||fire>0){
+        var fh=6+fire*0.14;
+        C(CAMP,GROUND-fh*0.5,fh*0.5,'#F0A63C'); C(CAMP,GROUND-fh*0.35,fh*0.3,'#F6E3A8');
+        torchlight(CAMP,GROUND-10,60+fire,0.3);
+      }
+      var i4;
+      for(i4=0;i4<sticks.length;i4++) if(!sticks[i4].got){
+        var sx=sticks[i4].x;
+        R(sx-8,GROUND-4,16,3,'#6B4E32'); R(sx-2,GROUND-7,12,3,'#7A5A3A');
+        if(Math.abs(sx-x)<22&&Math.floor(t*2)%2===0) T('[Z] палка',sx,GROUND-18,{size:9,color:'#F0A63C',align:'center'});
+      }
+      for(i4=0;i4<leaves.length;i4++) if(!leaves[i4].got){
+        var lx=leaves[i4].x;
+        EL(lx,GROUND-3,7,3,'#A8763A'); EL(lx+6,GROUND-2,5,2,'#8C5E2E');
+        if(Math.abs(lx-x)<22&&Math.floor(t*2)%2===0) T('[Z] листья',lx,GROUND-18,{size:9,color:'#F0A63C',align:'center'});
+      }
+      drawOme(CAMP+34,GROUND,{face:-1,pose:'idle',t:t});
+      drawPel(CAMP+58,GROUND,{face:-1,pose:'idle',t:t});
+      drawRomo(x,GROUND+J.y,{face:isDown('L')?-1:1,
+        pose:J.roll>0?'roll':((isDown('L')||isDown('R'))?'walk':'idle'),
+        t:J.roll>0?(0.42-J.roll):wt});
+      torchlight(x,GROUND-20,86,0.34);
+      ctx.restore();
+      darkness(x-cam,GROUND-24,150);
+      R(12,10,182,16,'rgba(14,20,16,.8)');
+      T('палки '+gotS+'/'+needS+'   листья '+gotL+'/'+needL,18,22,{size:10,color:'#8FB877'});
+      if(mode==='fire'){
+        R(W/2-70,150,140,30,'rgba(14,20,16,.9)'); R(W/2-70,150,140,1,'#F0A63C');
+        T('ДУЙ! [Z]',W/2,166,{size:12,font:FD,color:'#EFE9D6',align:'center'});
+        R(W/2-58,170,116,6,'rgba(0,0,0,.45)'); R(W/2-58,170,116*Math.min(1,fire/100),6,'#F0A63C');
+      }
+      if(msgT>0){ ctx.globalAlpha=Math.min(1,msgT);
+        T(msg,W/2,62,{size:11,font:FD,color:'#F0A63C',align:'center'}); ctx.globalAlpha=1; }
+      if(mode==='talk') d.draw();
+    }};
+};
+
+/* ---------- глава 4: утро ---------- */
+S.morning=function(){
+  var WW=1500, x=200, t=0, wt=0, d=null, mode='talk', cam=0, msg='', msgT=0, J={y:0,vy:0,roll:0};
+  var TYPES=['белый','лисичка','мухомор'];
+  var shrooms=[], i;
+  for(i=0;i<12;i++) shrooms.push({x:300+i*95+((i*41)%40),k:(i%4===3)?2:(i%2),got:false});
+  var needSh=5, gotSh=0;
+  var raki=[], caught=0, need=5, bucket=70, calmT=0;
+  for(i=0;i<7;i++) raki.push({x:180+i*46,vx:(i%2?1:-1)*26,inB:false,esc:0,out:0});
+  function flash(s){ msg=s; msgT=1.8; }
+  function say(l,a){ d=Dialog(l,a); mode='talk'; }
+  say([['narr','Утром пение птиц разбудило Ромомэо. Ребята ещё спали, костёр потух.'],
+       ['romo','Консервы мало, а на одних вкусняшках и пельменях не прожить. Пойду за едой — сварю грибной суп.'],
+       ['narr','Собери пять хороших грибов. Мухоморы не трогай! Потом иди направо, к речке.']],
+      function(){ mode='shroom'; });
+  return {
+    update:function(dt){
+      t+=dt; if(msgT>0) msgT-=dt; if(calmT>0) calmT-=dt;
+      if(mode==='talk'){ d.update(dt); return; }
+      var mv=0; if(isDown('L'))mv=-1; if(isDown('R'))mv=1;
+      if(press('U')) jumpNow(J);
+      if(press('B')) rollNow(J);
+      if(J.roll>0){ J.roll-=dt; x+=(isDown('L')?-1:1)*180*dt; wt+=dt; }
+      else if(mv){ x+=mv*92*dt; wt+=dt; }
+      gravity(J,dt);
+      if(mode==='shroom'){
+        x=Math.max(20,Math.min(WW,x));
+        if(press('A')) for(var s2=0;s2<shrooms.length;s2++){
+          var sh=shrooms[s2];
+          if(!sh.got&&Math.abs(sh.x-x)<22){
+            sh.got=true;
+            if(sh.k===2){ sfx('hurt'); flash('ФУ, МУХОМОР! Такой в суп нельзя'); }
+            else { gotSh++; sfx('pick'); flash((sh.k?'Лисичка':'Белый')+'  ('+gotSh+' из '+needSh+')'); }
+            break;
+          }
+        }
+        if(gotSh>=needSh&&x>=WW-10){
+          mode='talk';
+          say([['narr','Скоро он услышал шум воды. Речка была синяя и прозрачная, как берёзовая, а на дне — песок.'],
+               ['narr','В найденной двухлитровой бутылке сидел маленький рачок. И тогда Ромомэо осенило.'],
+               ['romo','Можно сварить суп с раками и грибами!'],
+               ['narr','Лови раков: подходи и жми Z. Складывай их в ведро — только в ведре дырка, и они вылезают.'],
+               ['narr','Жми Z рядом с ведром, чтобы угомонить тех, кто уже лезет наружу.']],
+               function(){ mode='river'; x=200; });
+        }
+        return;
+      }
+      if(mode==='river'){
+        x=Math.max(40,Math.min(460,x));
+        var inB=0,j;
+        for(j=0;j<raki.length;j++){
+          var r=raki[j];
+          if(r.inB){
+            inB++;
+            r.esc+=dt*(calmT>0?0:1);
+            if(r.esc>7){ r.inB=false; r.esc=0; r.x=bucket+30+Math.random()*60; sfx('hurt'); flash('Один рак сбежал!'); }
+          } else {
+            r.x+=r.vx*dt;
+            if(r.x<50){ r.x=50; r.vx*=-1; } if(r.x>460){ r.x=460; r.vx*=-1; }
+            if(Math.random()<dt*0.4) r.vx*=-1;
+          }
+        }
+        if(press('A')){
+          var done=false;
+          if(Math.abs(x-bucket)<26){ calmT=3.5; sfx('pick'); flash('Угомонил! Три секунды они спокойны'); done=true;
+            for(j=0;j<raki.length;j++) if(raki[j].inB) raki[j].esc=0; }
+          if(!done) for(j=0;j<raki.length;j++){
+            var r2=raki[j];
+            if(!r2.inB&&Math.abs(r2.x-x)<22){ r2.inB=true; r2.esc=0; sfx('drink'); splash(); break; }
+          }
+        }
+        if(inB>=need){
+          mode='talk';
+          say([['narr','Ромомэо вернулся к палатке. Пельмешкин и Омешкин уже проснулись.'],
+               ['ome','Где ты был? Мы тебя везде искали!'],
+               ['romo','К речке ходил, воды набрать.'],
+               ['ome','А что у тебя в ведре? И что это за ведро такое?'],
+               ['romo','В ведре раки. А ведро я просто нашёл под водой.'],
+               ['ome','А раки — это что-то вкусное?'],
+               ['pel','Нет, это, наверное, сорт каких-то пельмешек.'],
+               ['romo','Никакие не пельмешки. Это деликатес, только сырой — их надо сварить.'],
+               ['ome','А чего в ведре дырка?'],
+               ['romo','Я его под водой нашёл. Неудивительно, что оно сломано.'],
+               ['pel','А там пельмешки есть?'],
+               ['romo','Нет, Пельмешкин, их нет.'],
+               ['pel','Эй, вообще-то меня зовут Бока!'],
+               ['narr','Они налили воду в котелок, развели костёр и стали ждать. Раки сварились и стали красные, как раки.'],
+               ['ome','Теперь я понял, где раки зимуют!'],
+               ['narr','Ромомэо достал ложки, которые смастерил сам, и вручил их друзьям.'],
+               ['pel','Ммм, вкусно. Но пельмени были бы вкуснее.'],
+               ['romo','Собирайте палатку и пойдёмте дальше.'],
+               ['ome','Дальше — это домой?'],
+               ['romo','Нет, это в противоположную сторону от дома.'],
+               ['ome','Что?! Я думал, мы просто зайдём в лес, поспим и вернёмся!']],
+              function(){ nextChapter(); });
+        }
+        return;
+      }
+    },
+    draw:function(){
+      if(mode==='shroom'||(mode==='talk'&&gotSh<needSh)){
+        cam=Math.max(0,Math.min(WW-W,x-W/2));
+        forestBg(cam,false);
+        ctx.save(); ctx.translate(-cam,0);
+        for(var b2=0;b2<8;b2++) birch(200+b2*190,GROUND,60+((b2*23)%30));
+        for(var s3=0;s3<shrooms.length;s3++){
+          var sh=shrooms[s3]; if(sh.got) continue;
+          var sx=sh.x, cap=sh.k===2?'#C6453A':(sh.k?'#E0913C':'#B07A4A');
+          R(sx-2,GROUND-7,4,7,'#EFE9D6'); EL(sx,GROUND-8,7,5,cap);
+          if(sh.k===2){ R(sx-3,GROUND-10,2,2,'#EFE9D6'); R(sx+2,GROUND-11,2,2,'#EFE9D6'); }
+          if(Math.abs(sx-x)<22&&Math.floor(t*2)%2===0)
+            T('[Z] гриб',sx,GROUND-22,{size:9,color:'#F0A63C',align:'center'});
+        }
+        drawRomo(x,GROUND+J.y,{face:isDown('L')?-1:1,
+          pose:J.roll>0?'roll':((isDown('L')||isDown('R'))?'walk':'idle'),
+          t:J.roll>0?(0.42-J.roll):wt});
+        ctx.restore();
+        R(12,10,150,16,'rgba(14,20,16,.75)');
+        T('хорошие грибы: '+gotSh+' из '+needSh,18,22,{size:10,color:'#8FB877'});
+        if(gotSh>=needSh) T('теперь к речке →',W-14,22,{size:10,color:'#F0A63C',align:'right'});
+      } else {
+        var g=ctx.createLinearGradient(0,0,0,H);
+        g.addColorStop(0,'#8FC0CE'); g.addColorStop(0.5,'#A8C99B'); g.addColorStop(1,'#7FA86A');
+        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+        for(var p2=0;p2<8;p2++) pine(20+p2*62,120,44,'#3E6A3C','#356034');
+        R(0,120,W,26,'#7E8C54');
+        R(0,146,W,H-146,'#5FA8C4');                       // река
+        for(var w2=0;w2<40;w2++){
+          var wx=(w2*37+t*22)%W, wy=152+((w2*29)%100);
+          R(wx,wy,10,1,'rgba(240,250,255,.25)');
+        }
+        R(0,146,W,3,'#8FD0E0');
+        R(0,236,W,H-236,'#C9B88A');                        // ближний берег
+        R(bucket-14,GROUND-2,28,22,'#8A8F96'); R(bucket-14,GROUND-2,28,4,'#A4A9B0');
+        R(bucket+8,GROUND+14,5,5,'#5A5F66');
+        var inB2=0,k2;
+        for(k2=0;k2<raki.length;k2++){
+          var r3=raki[k2], rx,ry;
+          if(r3.inB){ inB2++; rx=bucket-8+(inB2%3)*8; ry=GROUND+2+(inB2>3?7:0); }
+          else { rx=r3.x; ry=190+((k2*37)%40); }
+          R(rx-6,ry-3,12,6,'#8A4A32'); R(rx+5,ry-5,4,4,'#7A3E28');
+          R(rx-9,ry-6,4,3,'#8A4A32'); R(rx-9,ry-1,4,3,'#8A4A32');
+          if(!r3.inB&&Math.abs(rx-x)<22&&Math.floor(t*2)%2===0)
+            T('[Z] хватай',rx,ry-14,{size:9,color:'#F0A63C',align:'center'});
+          if(r3.inB&&r3.esc>4.5) T('!',rx,GROUND-10,{size:10,font:FD,color:'#C6453A',align:'center'});
+        }
+        drawRomo(x,GROUND+18+J.y,{face:isDown('L')?-1:1,
+          pose:J.roll>0?'roll':((isDown('L')||isDown('R'))?'walk':'idle'),
+          t:J.roll>0?(0.42-J.roll):wt});
+        R(12,10,168,16,'rgba(14,20,16,.75)');
+        T('раков в ведре: '+inB2+' из '+need,18,22,{size:10,color:'#8FB877'});
+        if(calmT>0) T('спокойно...',W-14,22,{size:10,color:'#6FC3D8',align:'right'});
+        if(Math.abs(x-bucket)<26&&Math.floor(t*2)%2===0)
+          T('[Z] угомонить раков',bucket,GROUND-24,{size:9,color:'#6FC3D8',align:'center'});
+      }
+      if(msgT>0){ ctx.globalAlpha=Math.min(1,msgT);
+        T(msg,W/2,62,{size:11,font:FD,color:'#F0A63C',align:'center'}); ctx.globalAlpha=1; }
+      if(mode==='talk') d.draw();
+    }};
+};
+
+/* ---------- глава 5: страшная глубь ---------- */
+S.cave=function(){
+  var t=0, x=40, wt=0, d=null, mode='talk', rain=1, catX=330, catIn=false, lamp=false;
+  var bag=['рачок','ножик','пельмень','фонарик','консерва'], bagI=0, J={y:0,vy:0,roll:0};
+  function say(l,a){ d=Dialog(l,a); mode='talk'; }
+  say([['narr','Ребята шли и шли. Уже темнело. Ещё час — и стало совсем темно.'],
+       ['ome','Ааа! Как страшно! Что за звуки?'],
+       ['narr','Полил дождь.'],
+       ['pel','А-а! Ещё и дождь пошёл!'],
+       ['romo','Надо найти какое-то помещение. О, смотрите, там пещера — пошлите туда!'],
+       ['narr','Беги вправо, к пещере.']],function(){ mode='run'; });
+  return {
+    update:function(dt){
+      t+=dt;
+      if(mode==='talk'){ d.update(dt); return; }
+      var mv=0; if(isDown('L'))mv=-1; if(isDown('R'))mv=1;
+      if(press('U')) jumpNow(J);
+      if(press('B')) rollNow(J);
+      if(J.roll>0){ J.roll-=dt; x+=180*dt; wt+=dt; }
+      else if(mv){ x+=mv*100*dt; wt+=dt; }
+      gravity(J,dt);
+      x=Math.max(20,Math.min(460,x));
+      if(mode==='run'&&x>430){
+        mode='talk'; rain=0;
+        say([['narr','Спустя минуту они оказались в пещере.'],
+             ['ome','Может, всё-таки раскроем палатку?'],
+             ['romo','Зачем? Я спать хочу. Одеяло расстелили — и всё.'],
+             ['narr','Они легли спать. Но Пельмешкин никак не мог заснуть.'],
+             ['pel','Уже, наверное, час ночи... что это за звуки? То ли мяуканье, то ли что.'],
+             ['narr','Теперь ты играешь за Пельмешкина. Выйди наружу (вправо) и найди, кто там мяукает.']],
+             function(){ mode='night'; x=200; });
+      }
+      if(mode==='night'){
+        if(Math.random()<dt*0.5) meow();
+        if(!catIn&&Math.abs(x-catX)<22&&press('A')){
+          catIn=true; sfx('pick'); meow();
+          mode='talk';
+          say([['narr','Котёнок был полностью белый. Глаз в темноте видно не было.'],
+               ['pel','Затащу его в пещеру и накормлю. Только мой рюкзак потерялся...'],
+               ['pel','Полезу в рюкзак Ромомэо. Ничего же не видно...'],
+               ['narr','Жми Z и доставай из рюкзака всё подряд, пока не найдёшь чем накормить.']],
+               function(){ mode='bag'; });
+        }
+      }
+      if(mode==='bag'&&press('A')){
+        var item=bag[bagI];
+        bagI++;
+        if(item==='рачок'){ sfx('hurt');
+          say([['pel','А-А! Тут маленький рачок! Он на меня смотрит!'],
+               ['narr','Пельмешкин закрыл глаза и через страх полез дальше.']],function(){ mode='bag'; }); }
+        else if(item==='ножик'){ sfx('hit');
+          say([['pel','Ай! Укололся. Это маленький ножик.']],function(){ mode='bag'; }); }
+        else if(item==='пельмень'){ sfx('pick');
+          say([['pel','О! Пельмешек! ...нет, это не мой рюкзак. Положу обратно.']],function(){ mode='bag'; }); }
+        else if(item==='фонарик'){ lamp=true; sfx('win');
+          say([['narr','Включился свет. Ромомэо чуть не проснулся.'],
+               ['pel','Фонарик! Теперь видно.']],function(){ mode='bag'; }); }
+        else {
+          sfx('win');
+          say([['narr','Он нащупал консерву и накормил котёнка.'],
+               ['narr','Когда тот кушал, он был очень похож на пельмешек, так что Пельмешкин чуть не откусил кусочек.'],
+               ['pel','Без пельмешек я жить не могу... но это котя. Наверное.'],
+               ['narr','Когда кот доел, он свернулся в клубок и заснул. Тогда Пельмешкин тоже лёг спать.']],
+               function(){ nextChapter(); });
+        }
+      }
+    },
+    draw:function(){
+      if(mode==='run'||(mode==='talk'&&rain>0)){
+        var g=ctx.createLinearGradient(0,0,0,H);
+        g.addColorStop(0,'#1A2230'); g.addColorStop(1,'#2A3328');
+        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+        for(var p3=0;p3<10;p3++) pine(20+p3*52,GROUND,70+((p3*17)%24),'#16241B','#12201A');
+        R(0,GROUND,W,H-GROUND,'#1F2A1C');
+        R(404,120,76,96,'#2A2A2E'); ctx.fillStyle='#0A0C0A';
+        ctx.beginPath(); ctx.ellipse(442,196,26,34,0,0,6.2832); ctx.fill();
+        for(var r4=0;r4<80;r4++){
+          var rx=(r4*53+t*60)%W, ry=(r4*37+t*420)%H;
+          R(rx,ry,1,7,'rgba(180,210,230,.5)');
+        }
+        drawRomo(x,GROUND+J.y,{face:1,pose:(isDown('R')||isDown('L'))?'walk':'idle',t:wt});
+        drawOme(x-22,GROUND,{face:1,pose:'walk',t:wt+0.3});
+        drawPel(x-44,GROUND,{face:1,pose:'walk',t:wt+0.6});
+        if(Math.floor(t*2)%2===0) T('→ к пещере',W/2,60,{size:12,font:FD,color:'#F0A63C',align:'center'});
+      } else {
+        R(0,0,W,H,'#0C1210');
+        for(var bx=0;bx<W;bx+=40) for(var by=40;by<216;by+=22)
+          R(bx+((by/22)%2?0:20),by,38,20,((bx+by)%80===0)?'#182018':'#141A15');
+        R(0,GROUND,W,H-GROUND,'#10160F');
+        R(410,120,70,96,'#0A0E0A');
+        if(!catIn){
+          var cx=catX, cy=GROUND-8;
+          C(cx,cy,7,'#F4F0E4'); R(cx-6,cy-8,4,5,'#F4F0E4'); R(cx+2,cy-8,4,5,'#F4F0E4');
+          EL(cx-9,cy+3,6,4,'#F4F0E4');
+          if(Math.abs(cx-x)<22&&Math.floor(t*2)%2===0)
+            T('[Z] взять котёнка',cx,cy-20,{size:9,color:'#F0A63C',align:'center'});
+        } else { C(120,GROUND-6,7,'#F4F0E4'); R(114,GROUND-14,4,5,'#F4F0E4'); R(122,GROUND-14,4,5,'#F4F0E4'); }
+        drawRomo(70,GROUND,{face:1,pose:'lie',t:t});
+        drawOme(100,GROUND,{face:1,pose:'lie',t:t});
+        drawPel(x,GROUND+J.y,{face:isDown('L')?-1:1,
+          pose:(isDown('L')||isDown('R'))?'walk':'idle',t:wt});
+        if(mode==='bag'){
+          R(150,GROUND-26,26,26,'#3F5A44'); R(150,GROUND-26,26,6,'#314635');
+          if(Math.floor(t*2)%2===0) T('[Z] шарить в рюкзаке',163,GROUND-34,{size:9,color:'#F0A63C',align:'center'});
+        }
+        if(lamp) torchlight(x,GROUND-20,110,0.4);
+        darkness(x,GROUND-24,lamp?170:96);
+      }
+      if(mode==='talk') d.draw();
+    }};
+};
+
+/* ---------- финал: синие кристаллы ---------- */
+function monster(x,y,t,scale){
+  scale=scale||1;
+  ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
+  var br=Math.sin(t*1.6)*2;
+  EL(0,-30+br,54,32,'#5FA8D8'); EL(-10,-38+br,30,18,'#7FC0E8');
+  EL(0,-58+br,30,22,'#5FA8D8'); EL(-6,-62+br,16,10,'#8FCFF0');
+  for(var i=0;i<5;i++){                      // сироп на голове
+    var sx=-22+i*11, h=8+((i*7)%10)+Math.sin(t*2+i)*2;
+    R(sx,-72+br,5,h,'#C6453A'); C(sx+2,-72+br+h,3,'#C6453A');
+  }
+  R(-24,-74+br,48,6,'#C6453A');
+  C(4,-58+br,8,'#0B0E10'); C(6,-60+br,3,'#3A4650');   // один чёрный глаз
+  R(-30,-6,14,10,'#4A90C0'); R(16,-6,14,10,'#4A90C0');
+  ctx.restore();
+}
+function houseNight(t){
+  var g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#141C2A'); g.addColorStop(0.6,'#22283A'); g.addColorStop(1,'#2E3328');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  for(var k=0;k<40;k++) R((k*97+7)%W,(k*53)%120,1,1,'rgba(255,250,230,.5)');
+  C(60,44,13,'#F6E9C0'); C(56,40,11,'#141C2A');
+  var i;
+  for(i=0;i<8;i++) pine(20+i*64,206,52+((i*19)%18),'#1B2A20','#16241B');
+  R(250,110,170,106,'#5A4A3C'); R(240,104,190,10,'#7A6450');
+  ctx.fillStyle='#6E5A46'; ctx.beginPath();
+  ctx.moveTo(232,104); ctx.lineTo(335,58); ctx.lineTo(438,104); ctx.closePath(); ctx.fill();
+  R(276,140,44,40,'#F0C86A'); R(276,140,44,3,'#7A6450'); R(297,140,3,40,'#7A6450');
+  R(352,148,34,34,'#2A2A30'); R(352,148,34,3,'#7A6450');
+  R(0,GROUND,W,H-GROUND,'#2E3328'); R(0,GROUND,W,3,'#3A4030');
+}
+S.crystal=function(){
+  var t=0, x=60, wt=0, d=null, mode='talk', cam=0, WW=1500, stun=0, ego=0;
+  var shards=[], J={y:0,vy:0,roll:0}, ride=0, homeT=0;
+  function say(l,a){ d=Dialog(l,a); mode='talk'; }
+  say([['narr','Как обычно, первым проснулся Ромомэо. Вокруг себя он увидел кучу синих кристаллов.'],
+       ['narr','Все стены были синие и как будто двигались. А на одной из них — круг, полностью чёрный.'],
+       ['romo','Ребята! Вставайте!'],
+       ['all','А-А-А-А! ГДЕ МЫ?!'],
+       ['romo','Хватит орать.'],
+       ['narr','Вдруг круг зашевелился. Послышались звуки: гог... гок...'],
+       ['ome','Что за звуки?'],
+       ['pel','Ща я отломлю кусок этой хрени.'],
+       ['romo','Ты чего, не надо!'],
+       ['narr','Но было уже поздно. Хруст — и кусок откололся.']],
+      function(){ mode='gorilan'; t=0; });
+  return {
+    update:function(dt){
+      t+=dt; if(stun>0) stun-=dt;
+      if(mode==='talk'){ d.update(dt); return; }
+      if(mode==='gorilan'){
+        if(t<0.05){ crystalDing(); }
+        if(t>2.4){
+          mode='talk'; monsterVoice('wake');
+          say([['narr','И вдруг раздалось: ГОРИЛАН.'],
+               ['romo','Горилан... я вспомнил своего друга. Ох, какие были времена — Рома и Горилан.'],
+               ['narr','Но времени не было.'],
+               ['all','БЕЖИМ!!!'],
+               ['narr','Беги вправо к выходу. Сверху сыпятся кристаллы — прыгай (↑) и уворачивайся.']],
+               function(){ mode='run'; });
+        }
+        return;
+      }
+      if(mode==='run'){
+        var mv=0; if(isDown('L'))mv=-1; if(isDown('R'))mv=1;
+        if(press('U')) jumpNow(J);
+        if(press('B')) rollNow(J);
+        if(stun<=0){
+          if(J.roll>0){ J.roll-=dt; x+=180*dt; wt+=dt; }
+          else if(mv){ x+=mv*104*dt; wt+=dt; }
+        }
+        gravity(J,dt);
+        x=Math.max(20,Math.min(WW,x));
+        if(Math.random()<dt*2.2) shards.push({x:x+60+Math.random()*300-80,y:-20,v:150+Math.random()*90});
+        for(var i=shards.length-1;i>=0;i--){
+          var sp=shards[i]; sp.y+=sp.v*dt;
+          if(sp.y>GROUND-6){
+            if(Math.abs(sp.x-x)<13 && J.y>-18 && stun<=0){ stun=0.9; sfx('heavy'); }
+            shards.splice(i,1);
+          }
+        }
+        if(x>=WW-6){
+          mode='talk';
+          say([['narr','Когда они вышли, то увидели: всё это время они сидели на руках у гигантского монстра.'],
+               ['narr','Голубого, с сиропом на голове и одним полностью чёрным глазом.'],
+               ['ome','ВАУ!'],
+               ['narr','Омешкин сейчас же полез ему на голову и оседлал монстра.'],
+               ['pel','У меня из кофты что-то вывалилось... о, пельмешек!'],
+               ['narr','Но это оказался котёнок. Пельмешкин засунул его обратно.'],
+               ['narr','Пельмешкин и Ромомэо побежали, а Омешкин поехал за ними на монстре.']],
+               function(){ mode='out'; t=0; });
+        }
+        return;
+      }
+      if(mode==='out'){
+        ride+=dt;
+        if(ride>3.4){
+          mode='talk';
+          say([['narr','Они вышли из леса, поднялись на холм, потом повернули.'],
+               ['ome','О, смотрите, там спирт!'],
+               ['romo','Какой ещё спирт? Только не поднимай его.'],
+               ['narr','И в ту же секунду он оказался у него в руках.'],
+               ['narr','Снова повернули, и опять повернули. И вдали показался дом.'],
+               ['narr','Омешкин свалился с монстра, а монстр убежал обратно в лес.']],
+               function(){ mode='home'; homeT=0; });
+        }
+        return;
+      }
+      if(mode==='home'){
+        homeT+=dt;
+        if(homeT>1.2&&!ego){ ego=1;
+          mode='talk';
+          say([['narr','У окна их встретил котя.'],
+               ['narr','Пельмешкин достал точно такого же котю.'],
+               ['romo','Откуда это он у тебя?'],
+               ['ome','А какой настоящий?'],
+               ['pel','Не знаю.'],
+               ['narr','Котята начали играть.'],
+               ['romo','Ладно, оставим обоих. А как мы будем их различать?'],
+               ['ome','Вот смотрите: у подделки с ухом что-то, а у настоящего всё в порядке.'],
+               ['romo','Значит, этот — Котя, а этот — Ухо.'],
+               ['narr','Когда Ромомэо достал палатку из рюкзака, оттуда вывалился рюкзак Пельмешкина.'],
+               ['pel','О! Мой рюкзак!'],
+               ['narr','Пельмешкин сразу открыл его и начал есть пельмешки.'],
+               ['mama','Ах вы ж... Где вы были?!'],
+               ['all','В... в лесу.'],
+               ['mama','Ах вы ж!'],
+               ['narr','После этого герои больше никогда в жизни не могли сидеть на попе.']],
+               function(){ mode='end'; t=0; });
+        }
+        return;
+      }
+      if(mode==='end'&&t>1.2&&press('A')) goFade('title',{});
+    },
+    draw:function(){
+      if(mode==='out'||mode==='home'||mode==='end'||(mode==='talk'&&(ride>0||ego))){
+        houseNight(t);
+        if(mode==='out'||ride>0&&mode==='talk'&&!ego){
+          var mx=380-Math.min(300,ride*90);
+          monster(mx,GROUND,t,1);
+          drawOme(mx,GROUND-92,{face:1,pose:'idle',t:t});
+          drawRomo(mx-70,GROUND,{face:1,pose:'walk',t:t*3});
+          drawPel(mx-96,GROUND,{face:1,pose:'walk',t:t*3+0.4});
+        } else {
+          drawRomo(200,GROUND,{face:1,pose:'idle',t:t});
+          drawOme(228,GROUND,{face:1,pose:'idle',t:t});
+          drawPel(258,GROUND,{face:1,pose:'idle',t:t});
+          C(300,GROUND-6,7,'#F4F0E4'); R(294,GROUND-14,4,5,'#F4F0E4'); R(302,GROUND-14,4,5,'#F4F0E4');
+          C(320,GROUND-6,7,'#F4F0E4'); R(314,GROUND-14,4,5,'#EFE0D0'); R(322,GROUND-14,4,5,'#F4F0E4');
+        }
+        if(mode==='end'){
+          ctx.fillStyle='rgba(10,14,12,'+Math.min(0.74,t*0.5)+')'; ctx.fillRect(0,0,W,H);
+          ctx.globalAlpha=Math.min(1,t*0.9);
+          T('КОНЕЦ',W/2,112,{size:38,font:FD,color:'#EFE9D6',align:'center',shadowColor:'#0B120E'});
+          T('Приключения Омешкина, Ромомэо и Пельмешкина в лесу',W/2,140,
+            {size:15,font:FH,color:'#8FB877',align:'center'});
+          if(t>1.2&&Math.floor(t*1.6)%2===0)
+            T('[Z] на титульный экран',W/2,180,{size:11,color:'#F0A63C',align:'center'});
+          ctx.globalAlpha=1;
+        }
+      } else {
+        cam=Math.max(0,Math.min(WW-W,x-W/2));
+        var g=ctx.createLinearGradient(0,0,0,H);
+        g.addColorStop(0,'#0E2230'); g.addColorStop(1,'#123040');
+        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+        ctx.save(); ctx.translate(-cam,0);
+        var i2;
+        for(i2=0;i2<60;i2++){                       // синие кристаллы на стенах
+          var kx=(i2*61)%(WW+200), ky=30+((i2*37)%150), kh=12+((i2*13)%26);
+          ctx.fillStyle=(i2%3)?'#3E8FB0':'#6FC3D8';
+          ctx.beginPath(); ctx.moveTo(kx,ky); ctx.lineTo(kx+6,ky+kh*0.4);
+          ctx.lineTo(kx,ky+kh); ctx.lineTo(kx-6,ky+kh*0.4); ctx.closePath(); ctx.fill();
+        }
+        R(0,GROUND,WW+200,H-GROUND,'#10202A'); R(0,GROUND,WW+200,3,'#1A3442');
+        R(WW+10,120,60,96,'#0A0C0A');
+        T('ВЫХОД',WW+40,110,{size:10,font:FD,color:'#F0A63C',align:'center'});
+        for(i2=0;i2<shards.length;i2++){
+          var sp2=shards[i2];
+          ctx.fillStyle='#8FD8EC';
+          ctx.beginPath(); ctx.moveTo(sp2.x,sp2.y); ctx.lineTo(sp2.x+4,sp2.y+10);
+          ctx.lineTo(sp2.x,sp2.y+16); ctx.lineTo(sp2.x-4,sp2.y+10); ctx.closePath(); ctx.fill();
+        }
+        if(mode==='run'||mode==='gorilan'){
+          drawOme(x-26,GROUND,{face:1,pose:'walk',t:wt+0.3});
+          drawPel(x-50,GROUND,{face:1,pose:'walk',t:wt+0.6});
+        }
+        drawRomo(x,GROUND+J.y,{face:1,
+          pose:stun>0?'hurt':(J.roll>0?'roll':((isDown('L')||isDown('R'))?'walk':'idle')),
+          t:J.roll>0?(0.42-J.roll):wt});
+        ctx.restore();
+        if(mode==='gorilan'){
+          ctx.fillStyle='rgba(10,14,12,'+Math.min(0.8,t*0.8)+')'; ctx.fillRect(0,0,W,H);
+          if(t>0.5){
+            ctx.globalAlpha=Math.min(1,(t-0.5)*2);
+            head(W/2,110,GOR,'curls',1);
+            T('ГОРИЛАН',W/2,150,{size:26,font:FD,color:'#F4A63C',align:'center',shadowColor:'#C24A2C'});
+            T('привет из первой тетради',W/2,172,{size:14,font:FH,color:'#EFE9D6',align:'center'});
+            ctx.globalAlpha=1;
+          }
+        }
+        if(mode==='run'){
+          R(12,10,120,16,'rgba(14,20,16,.75)');
+          T('к выходу',18,22,{size:9,color:'#93A48C'});
+          R(66,14,58,8,'rgba(0,0,0,.4)'); R(66,14,58*Math.min(1,x/WW),8,'#6FC3D8');
+          if(stun>0) T('ОЙ!',x-cam,GROUND-50,{size:12,font:FD,color:'#C6453A',align:'center'});
+        }
+      }
+      if(mode==='talk') d.draw();
+    }};
+};
+/* ---------- главный цикл ---------- */
+var last=0;
+function frame(ts){
+  requestAnimationFrame(frame);
+  if(!last) last=ts;
+  var dt=Math.min(0.05,(ts-last)/1000); last=ts; now=ts/1000;
+  fitCanvas();
+  var sc=cv.width/W;
+  ctx.setTransform(sc,0,0,sc,0,0);
+  ctx.clearRect(0,0,W,H);
+  if(press('P')&&curName!=='title'&&curName!=='select'&&curName!=='card'&&curName!=='sounds'){
+    hit={}; restartChapter(); }
+  if(cur){ if(fadeDir!==1) cur.update(dt); cur.draw(); }
+  if(fadeDir===1){ fade+=dt*3.4; if(fade>=1){ fade=1; fadeDir=-1; go(fadeTo,fadeArg); } }
+  else if(fadeDir===-1){ fade-=dt*3.4; if(fade<=0){ fade=0; fadeDir=0; } }
+  if(fade>0){ ctx.fillStyle='rgba(10,7,6,'+fade+')'; ctx.fillRect(0,0,W,H); }
+  hit={};
+}
+function boot(){ fitCanvas(); go('title',{}); requestAnimationFrame(frame); }
+if(document.fonts&&document.fonts.ready){
+  var booted=false;
+  document.fonts.ready.then(function(){ if(!booted){booted=true;boot();} });
+  setTimeout(function(){ if(!booted){booted=true;boot();} },1500);
+} else boot();
+</script>
+</body>
+</html>
