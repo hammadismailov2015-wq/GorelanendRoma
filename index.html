@@ -430,81 +430,93 @@ function noiseBand(t,dur,vol,freq,q){
     src.connect(f); f.connect(g); g.connect(AC.destination); src.start(t);
   }catch(e){}
 }
-/* ЛЕВ. Рёв, а не моторчик: ровная дрожь громкости 20-28 раз в секунду давала
-   «бррр», поэтому её нет. Хрип берётся оттуда же, откуда у настоящего льва —
-   голос срывается на половинную частоту (подрык), плюс перегруз и неровность.
-   Смертный рёв длиннее, ниже и заканчивается ворчанием. */
+/* ЛЕВ. Ни ровной дрожи громкости, ни ступенек по высоте — и то и другое
+   на слух даёт блеяние. Высота едет плавно, хрип берётся из подрыка на
+   половинной частоте, перегруза и горловых резонансов. */
+function glide(param,pts,t,dur,jit){
+  var i,f;
+  f=pts[0][1]*(1+(Math.random()*2-1)*(jit||0));
+  param.setValueAtTime(f,t);
+  for(i=1;i<pts.length;i++){
+    f=pts[i][1]*(1+(Math.random()*2-1)*(jit||0));
+    param.linearRampToValueAtTime(f,t+pts[i][0]*dur);
+  }
+}
 function lionPulse(t,f,dur,vol,bus,dist){
   try{
-    var o=AC.createOscillator(), sub=AC.createOscillator(), o2=AC.createOscillator();
+    var o=AC.createOscillator(), sub=AC.createOscillator();
     var sh=AC.createWaveShaper(), lp=AC.createBiquadFilter(), g=AC.createGain(), sg=AC.createGain();
     sh.curve=distCurve(dist||46); sh.oversample='2x';
-    o.type='sawtooth'; o2.type='sawtooth'; sub.type='square';
-    o.frequency.setValueAtTime(f,t); o2.frequency.setValueAtTime(f,t); o2.detune.value=11;
-    sub.frequency.setValueAtTime(f*0.5,t);
-    lp.type='lowpass'; lp.frequency.setValueAtTime(1800,t);
-    lp.frequency.exponentialRampToValueAtTime(500,t+dur);
-    sg.gain.value=0.6;
+    o.type='sawtooth'; sub.type='square';
+    o.frequency.setValueAtTime(f,t); o.frequency.linearRampToValueAtTime(f*0.82,t+dur);
+    sub.frequency.setValueAtTime(f*0.5,t); sub.frequency.linearRampToValueAtTime(f*0.41,t+dur);
+    lp.type='lowpass'; lp.frequency.setValueAtTime(1500,t);
+    lp.frequency.exponentialRampToValueAtTime(420,t+dur);
+    sg.gain.value=0.7;
     g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(vol,t+0.02);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.03);
     g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(sh); o2.connect(sh); sub.connect(sg); sg.connect(sh);
+    o.connect(sh); sub.connect(sg); sg.connect(sh);
     sh.connect(lp); lp.connect(g); g.connect(bus);
-    o.start(t); o2.start(t); sub.start(t);
-    o.stop(t+dur+0.05); o2.stop(t+dur+0.05); sub.stop(t+dur+0.05);
+    o.start(t); sub.start(t); o.stop(t+dur+0.05); sub.stop(t+dur+0.05);
   }catch(e){}
 }
 function roar(kind){
   if(muted||!AC) return;
   var bus=sfxBus(); if(!bus) return;
   var die=kind==='die', hurt=kind==='hurt', intro=kind==='intro';
-  var dur = die?1.9 : hurt?0.45 : intro?1.25 : 0.8;
-  var vol = die?0.60 : hurt?0.40 : intro?0.56 : 0.50;
+  var dur = die?2.0 : hurt?0.5 : intro?1.4 : 0.9;
+  var vol = die?0.34 : hurt?0.24 : intro?0.32 : 0.29;   // тон тише — рычит шум
+  /* основной тон низкий: большой зверь, а не кошка */
   var pts = die
-    ? [[0,128],[0.05,178],[0.3,156],[0.62,112],[1,40]]
+    ? [[0,96],[0.08,118],[0.45,96],[0.75,70],[1,34]]
     : hurt
-      ? [[0,150],[0.08,208],[1,104]]
-      : [[0,118],[0.06,170],[0.45,152],[1,58]];
+      ? [[0,120],[0.10,150],[1,74]]
+      : [[0,88],[0.10,116],[0.55,104],[1,44]];
   try{
     var t=AC.currentTime;
     var o=AC.createOscillator(), o2=AC.createOscillator(), sub=AC.createOscillator();
     var sh=AC.createWaveShaper(), lp=AC.createBiquadFilter(), g=AC.createGain(), sg=AC.createGain();
-    sh.curve=distCurve(die?66:50); sh.oversample='2x';
-    o.type='sawtooth'; o2.type='sawtooth'; sub.type='square';
-    o2.detune.value=13;
-    /* высота по опорным точкам с мелкой неровностью — рёв «живой», но не дрожит ровно */
-    var stepN=Math.max(8,Math.floor(dur/0.045)), i, u, f;
-    for(i=0;i<=stepN;i++){
-      u=i/stepN; f=screamPitch(pts,u)*(1+(Math.random()*0.05-0.025));
-      o.frequency.setValueAtTime(f,t+u*dur);
-      o2.frequency.setValueAtTime(f,t+u*dur);
-      sub.frequency.setValueAtTime(f*0.5,t+u*dur);   // подрык: голос рвётся вдвое ниже
-    }
+    var th1=AC.createBiquadFilter(), th2=AC.createBiquadFilter(), tg=AC.createGain();
+    sh.curve=distCurve(die?72:58); sh.oversample='4x';
+    o.type='sawtooth'; o2.type='sawtooth'; sub.type='square'; o2.detune.value=17;
+    glide(o.frequency,pts,t,dur,0.012);
+    glide(o2.frequency,pts,t,dur,0.012);
+    var subPts=[],i;
+    for(i=0;i<pts.length;i++) subPts.push([pts[i][0],pts[i][1]*0.5]);
+    glide(sub.frequency,subPts,t,dur,0.012);       // подрык: голос рвётся вдвое ниже
     lp.type='lowpass';
-    lp.frequency.setValueAtTime(2800,t);
-    lp.frequency.exponentialRampToValueAtTime(380,t+dur);
-    lp.Q.value=2;
-    sg.gain.value=die?0.75:0.62;
+    lp.frequency.setValueAtTime(2400,t);
+    lp.frequency.exponentialRampToValueAtTime(340,t+dur);
+    lp.Q.value=1.2;
+    th1.type='bandpass'; th1.frequency.value=380; th1.Q.value=3.2;   // горло
+    th2.type='bandpass'; th2.frequency.value=1050; th2.Q.value=1.8;
+    tg.gain.value=0.8;
+    sg.gain.value=die?0.8:0.68;
     g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(vol,t+0.06);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.12);                 // рёв раскатывается
     g.gain.setValueAtTime(vol,t+dur*0.62);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.2);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.24);
     o.connect(sh); o2.connect(sh); sub.connect(sg); sg.connect(sh);
-    sh.connect(lp); lp.connect(g); g.connect(bus);
+    sh.connect(lp); lp.connect(g);
+    sh.connect(th1); sh.connect(th2); th1.connect(tg); th2.connect(tg); tg.connect(g);
+    g.connect(bus);
     o.start(t); o2.start(t); sub.start(t);
-    var stop=t+dur+0.26;
+    var stop=t+dur+0.3;
     o.stop(stop); o2.stop(stop); sub.stop(stop);
-    noiseBand(t,0.10,0.34,1300,1.0);                 // выброс воздуха в начале
-    noiseBand(t+0.05,dur*0.85,0.20,700,0.9);         // хрип в глотке
-    if(die){                                          // ворчание напоследок
-      lionPulse(t+dur+0.10,74,0.20,0.42,bus,60);
-      lionPulse(t+dur+0.38,66,0.20,0.34,bus,60);
-      lionPulse(t+dur+0.64,58,0.24,0.26,bus,60);
-      noiseBand(t+dur+0.05,0.5,0.14,260,1.1);
+    noiseBand(t,0.14,0.42,1000,0.8);                 // выброс воздуха
+    noiseBand(t+0.04,dur*0.95,0.46,300,0.7);         // низкое рычание
+    noiseBand(t+0.04,dur*0.9,0.32,760,0.9);          // гравий в глотке
+    noiseBand(t+0.10,dur*0.8,0.20,1900,1.1);         // шершавый верх
+    if(die){
+      lionPulse(t+dur+0.12,70,0.22,0.40,bus,64);
+      lionPulse(t+dur+0.42,62,0.22,0.32,bus,64);
+      lionPulse(t+dur+0.70,54,0.26,0.24,bus,64);
+      noiseBand(t+dur+0.06,0.55,0.14,240,1.0);
     }
-    if(intro){                                        // после рёва два коротких «ух-ух»
-      lionPulse(t+dur+0.12,86,0.16,0.34,bus,52);
-      lionPulse(t+dur+0.34,78,0.16,0.28,bus,52);
+    if(intro){
+      lionPulse(t+dur+0.14,80,0.18,0.34,bus,56);
+      lionPulse(t+dur+0.38,72,0.18,0.28,bus,56);
     }
   }catch(e){}
 }
@@ -566,10 +578,9 @@ function antVoice(kind){
   antBuzz(t,0.32,0.34,240,210);
   if(kind==='click'){ noiseBand(t,0.03,0.7,5000,2); noiseBand(t+0.07,0.03,0.6,4200,2); }
 }
-/* ЧЕЛОВЕК. Взрослый мужик орёт «А-А-А». Никакого ровного вибрато: от дрожи
-   12 раз в секунду получается блеяние козы. Вместо неё — низкий голос,
-   мужские форманты и лёгкая неровность, как у живых связок. */
-function screamPitch(pts,u){                    // ломаная по опорным точкам
+/* ЧЕЛОВЕК. Высота едет плавно: ступеньки по высоте 20 раз в секунду — это
+   и есть «бе-е-е». Форманты широкие, иначе голос гнусавит, как у козы. */
+function screamPitch(pts,u){
   var i;
   if(u<=pts[0][0]) return pts[0][1];
   for(i=1;i<pts.length;i++){
@@ -584,48 +595,43 @@ function scream(kind){
   if(muted||!AC) return;
   var bus=sfxBus(); if(!bus) return;
   var die=kind==='die', hurt=kind==='hurt';
-  var dur=die?1.5:hurt?0.42:0.55;
-  var vol=die?0.68:hurt?0.66:0.72;
-  /* опорные точки высоты голоса: рывок вверх на выдохе, потом вниз.
-     у смертного вопля голос ещё и срывается посередине */
+  var dur=die?1.6:hurt?0.45:0.6;
+  var vol=die?0.29:hurt?0.32:0.36;                      // голос тише, хрипа больше
   var pts = die
-    ? [[0,175],[0.07,242],[0.34,224],[0.42,148],[0.5,212],[0.72,158],[1,58]]
+    ? [[0,168],[0.10,188],[0.45,178],[0.58,150],[0.72,166],[1,58]]
     : hurt
-      ? [[0,168],[0.09,232],[0.55,196],[1,140]]
-      : [[0,152],[0.10,218],[0.60,206],[1,158]];
+      ? [[0,158],[0.12,176],[1,140]]
+      : [[0,148],[0.14,170],[0.70,164],[1,142]];    // почти ровно: «А-А-А», а не «бе-е»
   try{
     var t=AC.currentTime;
     var o=AC.createOscillator(), chest=AC.createOscillator();
-    var sh=AC.createWaveShaper(), pre=AC.createBiquadFilter(), g=AC.createGain();
+    var sh=AC.createWaveShaper(), pre=AC.createBiquadFilter(), g=AC.createGain(), dg=AC.createGain();
     var f1=AC.createBiquadFilter(), f2=AC.createBiquadFilter(), f3=AC.createBiquadFilter();
-    sh.curve=distCurve(9); sh.oversample='2x';
+    sh.curve=distCurve(11); sh.oversample='2x';
     o.type='sawtooth'; chest.type='triangle';
-    /* высота с мелкой неровностью — живой голос никогда не держит ровно */
-    var stepN=Math.max(6,Math.floor(dur/0.05)), i, u, f;
-    for(i=0;i<=stepN;i++){
-      u=i/stepN; f=screamPitch(pts,u)*(1+(Math.random()*0.026-0.013));
-      o.frequency.setValueAtTime(f,t+u*dur);
-      chest.frequency.setValueAtTime(f*0.5,t+u*dur);
-    }
-    pre.type='lowpass'; pre.frequency.value=3600; pre.Q.value=0.7;
-    f1.type='bandpass'; f1.frequency.value=640;  f1.Q.value=3.2;   // мужское «а»
-    f2.type='bandpass'; f2.frequency.value=1050; f2.Q.value=3.0;
-    f3.type='bandpass'; f3.frequency.value=2500; f3.Q.value=2.0;   // крикливый верх
-    var cg=AC.createGain(); cg.gain.value=0.5;                     // грудной низ
+    glide(o.frequency,pts,t,dur,0.008);            // плавно, с чуть заметной неровностью
+    var cp=[],i; for(i=0;i<pts.length;i++) cp.push([pts[i][0],pts[i][1]*0.5]);
+    glide(chest.frequency,cp,t,dur,0.008);
+    pre.type='lowpass'; pre.frequency.value=3800; pre.Q.value=0.6;
+    f1.type='bandpass'; f1.frequency.value=680;  f1.Q.value=1.9;   // широкое мужское «а»
+    f2.type='bandpass'; f2.frequency.value=1120; f2.Q.value=1.7;
+    f3.type='bandpass'; f3.frequency.value=2600; f3.Q.value=1.3;
+    dg.gain.value=0.42;                                            // прямой путь, чтобы не гнусавил
+    var cg=AC.createGain(); cg.gain.value=0.45;
     g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(vol,t+0.035);
-    g.gain.setValueAtTime(vol,t+dur*0.6);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.12);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.05);
+    g.gain.setValueAtTime(vol,t+dur*0.62);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.14);
     o.connect(sh); sh.connect(pre);
-    pre.connect(f1); pre.connect(f2); pre.connect(f3);
-    f1.connect(g); f2.connect(g); f3.connect(g);
+    pre.connect(f1); pre.connect(f2); pre.connect(f3); pre.connect(dg);
+    f1.connect(g); f2.connect(g); f3.connect(g); dg.connect(g);
     chest.connect(cg); cg.connect(g);
     g.connect(bus);
-    o.start(t); chest.start(t);
-    o.stop(t+dur+0.18); chest.stop(t+dur+0.18);
-    noiseBand(t,0.05,0.30,900,1.0);                                // придых в начале
-    noiseBand(t+0.04,dur*0.8,die?0.26:0.18,1800,1.1);              // сорванное дыхание
-    if(die){ noiseBand(t+dur,0.45,0.36,140,0.9); }                 // грохот падения
+    o.start(t); chest.start(t); o.stop(t+dur+0.2); chest.stop(t+dur+0.2);
+    noiseBand(t,0.07,0.40,700,0.8);                      // выдох
+    noiseBand(t+0.04,dur*0.9,die?0.46:0.40,1250,0.8);    // сорванный хрип — основной цвет крика
+    noiseBand(t+0.04,dur*0.85,0.26,2400,1.0);
+    if(die){ noiseBand(t+dur,0.45,0.27,140,0.9); }
   }catch(e){}
 }
 function voiceOf(kind,what){
