@@ -1011,8 +1011,7 @@ function pine(x,y,h,c1,c2){
 function birch(x,y,h){
   R(x-3,y-h,6,h,'#DDD6C2'); R(x-3,y-h,2,h,'#EFE9D6');
   for(var i=0;i<5;i++) R(x-3,y-h+8+i*(h/5),5,2,'#3A3428');
-  ctx.fillStyle='#6E9A55';
-  ctx.beginPath(); ctx.ellipse(x,y-h-6,14,10,0,0,6.2832); ctx.fill();
+  EL(x,y-h-14,26,18,'#5E8C46'); EL(x-9,y-h-8,16,11,'#6E9A55'); EL(x+10,y-h-6,14,10,'#6E9A55');
 }
 function forestBg(cam,night){
   var g=ctx.createLinearGradient(0,0,0,H);
@@ -1040,9 +1039,11 @@ function torchlight(x,y,r,a){
   gg.addColorStop(0,'rgba(240,166,60,'+(a||0.3)+')'); gg.addColorStop(1,'rgba(240,166,60,0)');
   ctx.fillStyle=gg; ctx.fillRect(x-r,y-r,r*2,r*2);
 }
-function darkness(x,y,r){
-  var v=ctx.createRadialGradient(x,y,r*0.35,x,y,r);
-  v.addColorStop(0,'rgba(6,10,8,0)'); v.addColorStop(1,'rgba(6,10,8,.93)');
+function darkness(x,y,r,a){
+  var v=ctx.createRadialGradient(x,y,r*0.45,x,y,r);
+  v.addColorStop(0,'rgba(6,10,8,0)');
+  v.addColorStop(0.65,'rgba(6,10,8,'+((a||0.8)*0.45).toFixed(2)+')');
+  v.addColorStop(1,'rgba(6,10,8,'+(a||0.8)+')');
   ctx.fillStyle=v; ctx.fillRect(0,0,W,H);
 }
 /* звуки второй игры */
@@ -1139,20 +1140,30 @@ S.select=function(){
 };
 
 /* ---------- глава 1: дома ---------- */
-function kitchen(t){
+function kitchen(t){                       // стены, окно, мебель у стен
   R(0,0,W,H,'#C9B08A'); R(0,0,W,120,'#D8C097');
   for(var i=0;i<W;i+=60) R(i,0,2,GROUND,'rgba(160,130,95,.35)');
-  R(300,40,120,74,'#6E9AB0'); R(300,40,120,6,'#8A6A48'); R(356,40,6,74,'#8A6A48');
-  R(300,110,120,6,'#8A6A48');
-  for(var k=0;k<5;k++) pine(310+k*26,104,26+((k*7)%10),'#3E6A3C','#356034');
+  R(60,34,118,72,'#6E9AB0'); R(60,34,118,6,'#8A6A48'); R(115,34,6,72,'#8A6A48');
+  R(60,102,118,6,'#8A6A48');
+  for(var k=0;k<5;k++) pine(70+k*26,98,24+((k*7)%10),'#3E6A3C','#356034');
   R(0,GROUND,W,H-GROUND,'#8A6A48'); R(0,GROUND,W,3,'#9E7C56');
-  R(30,150,90,10,'#7A5A3A'); R(34,160,6,54,'#6B4E32'); R(110,160,6,54,'#6B4E32');
-  R(44,142,16,10,'#D8DCE0'); R(48,138,8,4,'#B8BCC0');
-  R(150,176,180,8,'#A8814E'); R(156,184,8,30,'#7A5A3A'); R(322,184,8,30,'#7A5A3A');
-  R(196,160,18,16,'#E8E2D0'); R(214,164,8,3,'#E8E2D0');
-  R(240,164,12,12,'#EFD9A8'); R(268,166,10,10,'#C6453A');
+  R(360,96,96,118,'#B8BCC0'); R(360,96,96,6,'#CDD2D6'); R(360,150,96,4,'#9AA0A6');
+  R(448,120,4,18,'#7A8086'); R(448,164,4,18,'#7A8086');
+  T('❄',408,132,{size:14,color:'#7FB0C4',align:'center'});
+  R(196,40,58,44,'#8A6A48'); R(200,44,50,36,'#C9A87A');
+  T('лес',225,66,{size:12,font:FH,color:'#3E6A3C',align:'center'});
+  R(286,36,34,34,'#EFE9D6'); R(286,36,34,3,'#8A6A48');
+  R(302,42,2,12,'#3A3428'); R(302,52,9,2,'#3A3428');
+  R(20,150,92,10,'#7A5A3A'); R(24,160,6,54,'#6B4E32'); R(102,160,6,54,'#6B4E32');
+  R(34,142,16,10,'#D8DCE0'); R(38,138,8,4,'#B8BCC0');
+}
+function kitchenTable(t){                  // стол поверх героев и ниже их голов: сидят за столом
+  R(146,196,200,7,'#A8814E'); R(146,196,200,3,'#BE9560');
+  R(152,203,8,13,'#7A5A3A'); R(338,203,8,13,'#7A5A3A');
+  R(204,180,18,16,'#E8E2D0'); R(222,184,8,3,'#E8E2D0');      // чайник между героями
+  R(268,184,12,12,'#EFD9A8'); R(330,186,10,10,'#C6453A');    // чашки
   var st=Math.sin(t*3)*2;
-  R(200,152+st,2,8,'rgba(240,240,230,.5)'); R(206,150+st,2,9,'rgba(240,240,230,.35)');
+  R(208,172+st,2,8,'rgba(240,240,230,.5)'); R(214,170+st,2,9,'rgba(240,240,230,.35)');
 }
 S.home=function(){
   var t=0, ph='tea', d=null, x=110, wt=0, msg='', msgT=0;
@@ -1229,10 +1240,11 @@ S.home=function(){
     },
     draw:function(){
       kitchen(t);
-      if(ph==='tea'){
-        drawRomo(150,GROUND,{face:1,pose:'idle',t:t});
-        drawOme(200,GROUND,{face:-1,pose:'idle',t:t});
-        drawPel(300,GROUND,{face:-1,pose:'idle',t:t});
+      if(ph==='tea'||ph==='op'){
+        drawRomo(178,GROUND,{face:1,pose:'idle',t:t});
+        drawOme(240,GROUND,{face:1,pose:'idle',t:t});
+        drawPel(306,GROUND,{face:-1,pose:'idle',t:t});
+        kitchenTable(t);
       } else {
         for(var i=0;i<items.length;i++){
           if(taken[i]) continue;
@@ -1452,24 +1464,33 @@ S.forest=function(){
       var i4;
       for(i4=0;i4<sticks.length;i4++) if(!sticks[i4].got){
         var sx=sticks[i4].x;
-        R(sx-8,GROUND-4,16,3,'#6B4E32'); R(sx-2,GROUND-7,12,3,'#7A5A3A');
-        if(Math.abs(sx-x)<22&&Math.floor(t*2)%2===0) T('[Z] палка',sx,GROUND-18,{size:9,color:'#F0A63C',align:'center'});
+        if(Math.abs(sx-x)<120) torchlight(sx,GROUND-4,26,0.18);
+        R(sx-8,GROUND-4,16,3,'#8A6A44'); R(sx-2,GROUND-7,12,3,'#A07C50');
+        if(Math.abs(sx-x)<22&&Math.floor(t*2)%2===0) T('[Z] палка',sx,GROUND-36,{size:9,color:'#F0A63C',align:'center'});
       }
       for(i4=0;i4<leaves.length;i4++) if(!leaves[i4].got){
         var lx=leaves[i4].x;
-        EL(lx,GROUND-3,7,3,'#A8763A'); EL(lx+6,GROUND-2,5,2,'#8C5E2E');
-        if(Math.abs(lx-x)<22&&Math.floor(t*2)%2===0) T('[Z] листья',lx,GROUND-18,{size:9,color:'#F0A63C',align:'center'});
+        if(Math.abs(lx-x)<120) torchlight(lx,GROUND-3,24,0.18);
+        EL(lx,GROUND-3,8,3,'#C4923E'); EL(lx+6,GROUND-2,6,2,'#A8763A');
+        if(Math.abs(lx-x)<22&&Math.floor(t*2)%2===0) T('[Z] листья',lx,GROUND-36,{size:9,color:'#F0A63C',align:'center'});
       }
       drawOme(CAMP+34,GROUND,{face:-1,pose:'idle',t:t});
       drawPel(CAMP+58,GROUND,{face:-1,pose:'idle',t:t});
       drawRomo(x,GROUND+J.y,{face:isDown('L')?-1:1,
         pose:J.roll>0?'roll':((isDown('L')||isDown('R'))?'walk':'idle'),
         t:J.roll>0?(0.42-J.roll):wt});
-      torchlight(x,GROUND-20,86,0.34);
+      torchlight(x,GROUND-20,132,0.5);
+      torchlight(x,GROUND-20,60,0.4);
       ctx.restore();
-      darkness(x-cam,GROUND-24,150);
+      darkness(x-cam,GROUND-24,210,0.78);
       R(12,10,182,16,'rgba(14,20,16,.8)');
       T('палки '+gotS+'/'+needS+'   листья '+gotL+'/'+needL,18,22,{size:10,color:'#8FB877'});
+      if(mode==='play'&&gotS>=needS&&gotL>=needL){
+        if(x>CAMP+40) T('← неси дрова к поваленному дереву',W/2,44,
+          {size:11,font:FD,color:Math.floor(t*2)%2?'#F0A63C':'#EFE9D6',align:'center'});
+        else if(Math.abs(x-CAMP)<30) T('[Z] развести костёр',x-cam,GROUND-56,
+          {size:11,font:FD,color:'#F0A63C',align:'center'});
+      }
       if(mode==='fire'){
         R(W/2-70,150,140,30,'rgba(14,20,16,.9)'); R(W/2-70,150,140,1,'#F0A63C');
         T('ДУЙ! [Z]',W/2,166,{size:12,font:FD,color:'#EFE9D6',align:'center'});
@@ -1489,7 +1510,7 @@ S.morning=function(){
   for(i=0;i<12;i++) shrooms.push({x:300+i*95+((i*41)%40),k:(i%4===3)?2:(i%2),got:false});
   var needSh=5, gotSh=0;
   var raki=[], caught=0, need=5, bucket=70, calmT=0;
-  for(i=0;i<7;i++) raki.push({x:180+i*46,vx:(i%2?1:-1)*26,inB:false,esc:0,out:0});
+  for(i=0;i<7;i++) raki.push({x:150+i*48,vx:(i%2?1:-1)*40,inB:false,esc:0,rest:0,next:1+i*0.4});
   function flash(s){ msg=s; msgT=1.8; }
   function say(l,a){ d=Dialog(l,a); mode='talk'; }
   say([['narr','Утром пение птиц разбудило Ромомэо. Ребята ещё спали, костёр потух.'],
@@ -1513,7 +1534,9 @@ S.morning=function(){
           if(!sh.got&&Math.abs(sh.x-x)<22){
             sh.got=true;
             if(sh.k===2){ sfx('hurt'); flash('ФУ, МУХОМОР! Такой в суп нельзя'); }
-            else { gotSh++; sfx('pick'); flash((sh.k?'Лисичка':'Белый')+'  ('+gotSh+' из '+needSh+')'); }
+            else { gotSh++; sfx('pick');
+              flash(gotSh>=needSh?'Грибов хватит! Теперь направо, к речке →'
+                                 :((sh.k?'Лисичка':'Белый')+'  ('+gotSh+' из '+needSh+')')); }
             break;
           }
         }
@@ -1522,7 +1545,7 @@ S.morning=function(){
           say([['narr','Скоро он услышал шум воды. Речка была синяя и прозрачная, как берёзовая, а на дне — песок.'],
                ['narr','В найденной двухлитровой бутылке сидел маленький рачок. И тогда Ромомэо осенило.'],
                ['romo','Можно сварить суп с раками и грибами!'],
-               ['narr','Лови раков: подходи и жми Z. Складывай их в ведро — только в ведре дырка, и они вылезают.'],
+               ['narr','Раки удирают, но иногда замирают — вот тогда и хватай (Z). Складывай их в ведро.'],
                ['narr','Жми Z рядом с ведром, чтобы угомонить тех, кто уже лезет наружу.']],
                function(){ mode='river'; x=200; });
         }
@@ -1538,9 +1561,19 @@ S.morning=function(){
             r.esc+=dt*(calmT>0?0:1);
             if(r.esc>7){ r.inB=false; r.esc=0; r.x=bucket+30+Math.random()*60; sfx('hurt'); flash('Один рак сбежал!'); }
           } else {
-            r.x+=r.vx*dt;
-            if(r.x<50){ r.x=50; r.vx*=-1; } if(r.x>460){ r.x=460; r.vx*=-1; }
-            if(Math.random()<dt*0.4) r.vx*=-1;
+            /* рак то замирает, то удирает — и удирает именно от тебя */
+            if(r.rest>0){ r.rest-=dt; }
+            else {
+              r.next-=dt;
+              /* пока ты дышишь ему в спину, рак не замрёт — надо отойти и подкрасться */
+              if(r.next<=0 && Math.abs(r.x-x)>58){ r.rest=1.9; r.next=1.4+Math.random()*1.8; }
+              var away=(r.x-x);
+              if(Math.abs(away)<64) r.vx=(away<0?-1:1)*86;     // пугается и удирает
+              r.x+=r.vx*dt;
+              if(r.x<50){ r.x=50; r.vx=Math.abs(r.vx); }
+              if(r.x>460){ r.x=460; r.vx=-Math.abs(r.vx); }
+              if(Math.random()<dt*0.5) r.vx*=-1;
+            }
           }
         }
         if(press('A')){
@@ -1549,7 +1582,11 @@ S.morning=function(){
             for(j=0;j<raki.length;j++) if(raki[j].inB) raki[j].esc=0; }
           if(!done) for(j=0;j<raki.length;j++){
             var r2=raki[j];
-            if(!r2.inB&&Math.abs(r2.x-x)<22){ r2.inB=true; r2.esc=0; sfx('drink'); splash(); break; }
+            if(r2.inB||Math.abs(r2.x-x)>=28) continue;
+            if(r2.rest>0){ r2.inB=true; r2.esc=0; r2.rest=0; sfx('drink'); splash();
+              flash('Попался!'); }
+            else { r2.vx=(r2.x<x?-1:1)*110; r2.rest=0; sfx('hurt'); flash('Ушёл! Лови, когда замрёт'); }
+            break;
           }
         }
         if(inB>=need){
@@ -1592,14 +1629,14 @@ S.morning=function(){
           R(sx-2,GROUND-7,4,7,'#EFE9D6'); EL(sx,GROUND-8,7,5,cap);
           if(sh.k===2){ R(sx-3,GROUND-10,2,2,'#EFE9D6'); R(sx+2,GROUND-11,2,2,'#EFE9D6'); }
           if(Math.abs(sx-x)<22&&Math.floor(t*2)%2===0)
-            T('[Z] гриб',sx,GROUND-22,{size:9,color:'#F0A63C',align:'center'});
+            T('[Z] гриб',sx,GROUND-38,{size:9,color:'#F0A63C',align:'center'});
         }
         drawRomo(x,GROUND+J.y,{face:isDown('L')?-1:1,
           pose:J.roll>0?'roll':((isDown('L')||isDown('R'))?'walk':'idle'),
           t:J.roll>0?(0.42-J.roll):wt});
         ctx.restore();
         R(12,10,150,16,'rgba(14,20,16,.75)');
-        T('хорошие грибы: '+gotSh+' из '+needSh,18,22,{size:10,color:'#8FB877'});
+        T('хорошие грибы: '+Math.min(gotSh,needSh)+' из '+needSh,18,22,{size:10,color:'#8FB877'});
         if(gotSh>=needSh) T('теперь к речке →',W-14,22,{size:10,color:'#F0A63C',align:'right'});
       } else {
         var g=ctx.createLinearGradient(0,0,0,H);
@@ -1612,19 +1649,29 @@ S.morning=function(){
           var wx=(w2*37+t*22)%W, wy=152+((w2*29)%100);
           R(wx,wy,10,1,'rgba(240,250,255,.25)');
         }
+        for(var bb=0;bb<14;bb++){
+          var bx2=(bb*67+13)%W, by2=236-((t*26+bb*17)%86);
+          C(bx2,by2,1.5,'rgba(240,250,255,.35)');
+        }
         R(0,146,W,3,'#8FD0E0');
         R(0,236,W,H-236,'#C9B88A');                        // ближний берег
         R(bucket-14,GROUND-2,28,22,'#8A8F96'); R(bucket-14,GROUND-2,28,4,'#A4A9B0');
         R(bucket+8,GROUND+14,5,5,'#5A5F66');
-        var inB2=0,k2;
+        var inB2=0,k2,nearest=-1,nd=1e9;
+        for(k2=0;k2<raki.length;k2++)
+          if(!raki[k2].inB&&Math.abs(raki[k2].x-x)<nd){ nd=Math.abs(raki[k2].x-x); nearest=k2; }
         for(k2=0;k2<raki.length;k2++){
           var r3=raki[k2], rx,ry;
           if(r3.inB){ inB2++; rx=bucket-8+(inB2%3)*8; ry=GROUND+2+(inB2>3?7:0); }
           else { rx=r3.x; ry=190+((k2*37)%40); }
           R(rx-6,ry-3,12,6,'#8A4A32'); R(rx+5,ry-5,4,4,'#7A3E28');
           R(rx-9,ry-6,4,3,'#8A4A32'); R(rx-9,ry-1,4,3,'#8A4A32');
-          if(!r3.inB&&Math.abs(rx-x)<22&&Math.floor(t*2)%2===0)
-            T('[Z] хватай',rx,ry-14,{size:9,color:'#F0A63C',align:'center'});
+          if(!r3.inB&&r3.rest>0){                     // замер — вот сейчас и хватай
+            EL(rx,ry+5,11,3,'rgba(240,166,60,.4)');
+            if(k2===nearest&&Math.floor(t*5)%2===0)
+              T('замер! [Z]',rx,ry-16,{size:9,font:FD,color:'#F0A63C',align:'center'});
+          } else if(!r3.inB&&k2===nearest&&nd<38&&Math.floor(t*2)%2===0)
+            T('убегает',rx,ry-16,{size:9,color:'#93A48C',align:'center'});
           if(r3.inB&&r3.esc>4.5) T('!',rx,GROUND-10,{size:10,font:FD,color:'#C6453A',align:'center'});
         }
         drawRomo(x,GROUND+18+J.y,{face:isDown('L')?-1:1,
@@ -1732,23 +1779,32 @@ S.cave=function(){
           R(bx+((by/22)%2?0:20),by,38,20,((bx+by)%80===0)?'#182018':'#141A15');
         R(0,GROUND,W,H-GROUND,'#10160F');
         R(410,120,70,96,'#0A0E0A');
-        if(!catIn){
-          var cx=catX, cy=GROUND-8;
-          C(cx,cy,7,'#F4F0E4'); R(cx-6,cy-8,4,5,'#F4F0E4'); R(cx+2,cy-8,4,5,'#F4F0E4');
-          EL(cx-9,cy+3,6,4,'#F4F0E4');
-          if(Math.abs(cx-x)<22&&Math.floor(t*2)%2===0)
-            T('[Z] взять котёнка',cx,cy-20,{size:9,color:'#F0A63C',align:'center'});
-        } else { C(120,GROUND-6,7,'#F4F0E4'); R(114,GROUND-14,4,5,'#F4F0E4'); R(122,GROUND-14,4,5,'#F4F0E4'); }
-        drawRomo(70,GROUND,{face:1,pose:'lie',t:t});
-        drawOme(100,GROUND,{face:1,pose:'lie',t:t});
-        drawPel(x,GROUND+J.y,{face:isDown('L')?-1:1,
-          pose:(isDown('L')||isDown('R'))?'walk':'idle',t:wt});
+        drawRomo(66,GROUND,{face:1,pose:'lie',t:t});
+        drawOme(96,GROUND,{face:1,pose:'lie',t:t});
+        R(54,GROUND-9,58,9,'#4A5A6E'); R(54,GROUND-9,58,2,'#5E7086');   // одеяло
         if(mode==='bag'){
           R(150,GROUND-26,26,26,'#3F5A44'); R(150,GROUND-26,26,6,'#314635');
-          if(Math.floor(t*2)%2===0) T('[Z] шарить в рюкзаке',163,GROUND-34,{size:9,color:'#F0A63C',align:'center'});
+          R(156,GROUND-20,14,3,'#2A3A2E');
         }
-        if(lamp) torchlight(x,GROUND-20,110,0.4);
-        darkness(x,GROUND-24,lamp?170:96);
+        drawPel(x,GROUND+J.y,{face:isDown('L')?-1:1,
+          pose:(isDown('L')||isDown('R'))?'walk':'idle',t:wt});
+        if(lamp) torchlight(x,GROUND-20,150,0.5);
+        darkness(x,GROUND-24,lamp?230:150,lamp?0.72:0.84);
+        if(!catIn){                                   // белый котёнок светится в темноте
+          var cx=catX, cy=GROUND-8;
+          torchlight(cx,cy-4,40,0.16);
+          C(cx,cy,7,'#F8F5EC'); R(cx-6,cy-8,4,5,'#F8F5EC'); R(cx+2,cy-8,4,5,'#F8F5EC');
+          EL(cx-9,cy+3,6,4,'#F8F5EC'); R(cx-4,cy-2,2,2,'#2A2620'); R(cx+2,cy-2,2,2,'#2A2620');
+          if(Math.abs(cx-x)<26&&Math.floor(t*2)%2===0)
+            T('[Z] взять котёнка',cx,cy-22,{size:10,font:FD,color:'#F0A63C',align:'center'});
+          else if(Math.floor(t*1.2)%2===0)
+            T('мяу...',cx,cy-22,{size:11,font:FH,color:'rgba(239,233,214,.75)',align:'center'});
+        } else {
+          C(120,GROUND-6,7,'#F8F5EC'); R(114,GROUND-14,4,5,'#F8F5EC'); R(122,GROUND-14,4,5,'#F8F5EC');
+          torchlight(120,GROUND-8,34,0.14);
+        }
+        if(mode==='bag'&&Math.floor(t*2)%2===0)
+          T('[Z] шарить в рюкзаке',163,GROUND-36,{size:10,font:FD,color:'#F0A63C',align:'center'});
       }
       if(mode==='talk') d.draw();
     }};
@@ -1894,7 +1950,7 @@ S.crystal=function(){
         if(mode==='out'||ride>0&&mode==='talk'&&!ego){
           var mx=380-Math.min(300,ride*90);
           monster(mx,GROUND,t,1);
-          drawOme(mx,GROUND-92,{face:1,pose:'idle',t:t});
+          drawOme(mx,GROUND-76,{face:1,pose:'idle',t:t});   // сидит на голове, а не парит
           drawRomo(mx-70,GROUND,{face:1,pose:'walk',t:t*3});
           drawPel(mx-96,GROUND,{face:1,pose:'walk',t:t*3+0.4});
         } else {
@@ -1921,20 +1977,29 @@ S.crystal=function(){
         ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
         ctx.save(); ctx.translate(-cam,0);
         var i2;
-        for(i2=0;i2<60;i2++){                       // синие кристаллы на стенах
-          var kx=(i2*61)%(WW+200), ky=30+((i2*37)%150), kh=12+((i2*13)%26);
+        for(i2=0;i2<70;i2++){                       // кристаллы растут с потолка и от пола
+          var kx=(i2*47)%(WW+200), down=(i2%2===0), kh=14+((i2*13)%30);
+          var ky=down?(6+((i2*17)%46)):(GROUND-kh-((i2*11)%26));
           ctx.fillStyle=(i2%3)?'#3E8FB0':'#6FC3D8';
-          ctx.beginPath(); ctx.moveTo(kx,ky); ctx.lineTo(kx+6,ky+kh*0.4);
-          ctx.lineTo(kx,ky+kh); ctx.lineTo(kx-6,ky+kh*0.4); ctx.closePath(); ctx.fill();
+          ctx.beginPath();
+          if(down){ ctx.moveTo(kx,ky+kh); ctx.lineTo(kx+7,ky); ctx.lineTo(kx-7,ky); }
+          else { ctx.moveTo(kx,ky); ctx.lineTo(kx+7,ky+kh); ctx.lineTo(kx-7,ky+kh); }
+          ctx.closePath(); ctx.fill();
+          if(i2%5===0){ var gg=ctx.createRadialGradient(kx,ky+kh/2,2,kx,ky+kh/2,34);
+            gg.addColorStop(0,'rgba(111,195,216,.22)'); gg.addColorStop(1,'rgba(111,195,216,0)');
+            ctx.fillStyle=gg; ctx.fillRect(kx-34,ky+kh/2-34,68,68); }
         }
         R(0,GROUND,WW+200,H-GROUND,'#10202A'); R(0,GROUND,WW+200,3,'#1A3442');
         R(WW+10,120,60,96,'#0A0C0A');
         T('ВЫХОД',WW+40,110,{size:10,font:FD,color:'#F0A63C',align:'center'});
         for(i2=0;i2<shards.length;i2++){
           var sp2=shards[i2];
-          ctx.fillStyle='#8FD8EC';
-          ctx.beginPath(); ctx.moveTo(sp2.x,sp2.y); ctx.lineTo(sp2.x+4,sp2.y+10);
-          ctx.lineTo(sp2.x,sp2.y+16); ctx.lineTo(sp2.x-4,sp2.y+10); ctx.closePath(); ctx.fill();
+          EL(sp2.x,GROUND-1,9,3,'rgba(240,166,60,.5)');        // тень-предупреждение на полу
+          ctx.fillStyle='rgba(200,240,255,.35)';
+          ctx.fillRect(sp2.x-2,Math.max(0,sp2.y-22),4,22);      // шлейф
+          ctx.fillStyle='#EAF8FF';
+          ctx.beginPath(); ctx.moveTo(sp2.x,sp2.y); ctx.lineTo(sp2.x+5,sp2.y+11);
+          ctx.lineTo(sp2.x,sp2.y+18); ctx.lineTo(sp2.x-5,sp2.y+11); ctx.closePath(); ctx.fill();
         }
         if(mode==='run'||mode==='gorilan'){
           drawOme(x-26,GROUND,{face:1,pose:'walk',t:wt+0.3});
@@ -1948,9 +2013,10 @@ S.crystal=function(){
           ctx.fillStyle='rgba(10,14,12,'+Math.min(0.8,t*0.8)+')'; ctx.fillRect(0,0,W,H);
           if(t>0.5){
             ctx.globalAlpha=Math.min(1,(t-0.5)*2);
-            head(W/2,110,GOR,'curls',1);
-            T('ГОРИЛАН',W/2,150,{size:26,font:FD,color:'#F4A63C',align:'center',shadowColor:'#C24A2C'});
-            T('привет из первой тетради',W/2,172,{size:14,font:FH,color:'#EFE9D6',align:'center'});
+            ctx.save(); ctx.translate(W/2,92); ctx.scale(3.2,3.2);
+            head(0,0,GOR,'curls',1); ctx.restore();
+            T('ГОРИЛАН',W/2,158,{size:28,font:FD,color:'#F4A63C',align:'center',shadowColor:'#C24A2C'});
+            T('привет из первой тетради',W/2,182,{size:15,font:FH,color:'#EFE9D6',align:'center'});
             ctx.globalAlpha=1;
           }
         }
